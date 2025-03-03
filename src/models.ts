@@ -8,6 +8,8 @@ interface Model {
 }
 
 export function handleModelListRequest() {
+    console.info("Handling model list request");
+    
     const list: Model[] = []
 
     for (const provider of Object.values(apiConfig.providers)) {
@@ -81,6 +83,8 @@ export function pickModelChannel(modelId: string) {
             name: provider.name,
             model: typeof model === "string" ? model : model.destination,
             baseURL: provider.baseURL,
+            azure: "azure" in provider ? (provider.azure as boolean) : false,
+            azureAPIVersion: "azureAPIVersion" in provider ? (provider.azureAPIVersion as string) : undefined,
         },
         key,
     }

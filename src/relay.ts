@@ -19,10 +19,20 @@ export async function relayLLMRequest(request: Request) {
     body.model = channel.provider.model;
 
     // Replace the baseURL with the provider's baseURL
-    const url = request.url.replace(/^https?:.*\/v1/, channel.provider.baseURL);
+    let url: string;
 
     const headers = new Headers(request.headers);
-    headers.set('Authorization', `Bearer ${channel.key}`);
+
+    if (channel.provider.azure) {
+        url = request.url.replace(/^https?:.*\/v1/, channel.provider.baseURL + `/openai/deployments/${channel.provider.model}`);
+        url += `?api-version=${channel.provider.azureAPIVersion}`;
+
+        headers.set('api-key', channel.key);
+    } else {
+        url = request.url.replace(/^https?:.*\/v1/, channel.provider.baseURL);
+
+        headers.set('Authorization', `Bearer ${channel.key}`);
+    }
 
     console.info(`Provider: ${channel.provider.name}, URL: ${url}`);
     console.info(`Requested Model: ${body.model}`);
