@@ -9,17 +9,17 @@ export default {
             return handleOPTIONS();
         }
 
+        // Get URL path
+        const path = new URL(request.url).pathname;
+
         // Handle / endpoint
-        if (request.url === "/") {
+        if (path === "/") {
             const body = {
                 message: "Welcome to the LLM API",
             }
 
             return Response.json(body);
         }
-
-        // Get URL path
-        const path = new URL(request.url).pathname;
 
         // Handle /proxy/google-genai
         if (path.startsWith("/proxy/google-genai")) {
