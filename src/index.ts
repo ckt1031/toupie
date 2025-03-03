@@ -51,15 +51,15 @@ export default {
                 return Response.json(errorBody, { status: 401 });
             }
 
-            if (path === "/v1/models") {
+            if (path === "/v1/models" && request.method === "GET") {
                 return handleModelListRequest();
             }
 
-            if (path === "/v1/chat/completions") {
+            if (path === "/v1/chat/completions" && request.method === "POST") {
                 return relayLLMRequest(request);
             }
 
-            if (path === "/v1/embeddings") {
+            if (path === "/v1/embeddings" && request.method === "POST") {
                 return relayLLMRequest(request);
             }
         }
