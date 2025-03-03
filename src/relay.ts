@@ -23,6 +23,9 @@ export async function relayLLMRequest(request: Request) {
 
 	const headers = new Headers(request.headers);
 
+	// remove host header
+	headers.delete("host");
+
 	if (channel.provider.isAzure) {
 		url = request.url.replace(
 			/^https?:.*\/v1/,

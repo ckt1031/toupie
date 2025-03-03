@@ -83,21 +83,38 @@ export default {
 };
 
 const handleProxy = async (request: Request, path: string, host: string) => {
-	const url = new URL(request.url);
-	// Replace with the official host
-	url.port = ""; // Remove port number in local environment
-	url.protocol = "https:"; // Use HTTPS in local environment
-	url.host = host;
-	url.pathname = url.pathname.replace(path, "");
+	const re = new RegExp(`^https?://.*${path}`);
+	const url = request.url.replace(re, `https://${host}`);
 
-	const modifiedRequest = new Request(url.toString(), {
-		headers: request.headers,
+	console.info(`Proxying request to ${url}`);
+
+	const headers = new Headers(request.headers);
+
+	// Remove the host header
+	headers.delete("host");
+
+	const modifiedRequest = new Request(url, {
+		headers,
 		method: request.method,
 		body: request.body,
 		redirect: "follow",
 	});
 
 	const response = await fetch(modifiedRequest);
+
+	if (response.status === 404) {
+		const errorBody = {
+			error: {
+				message: "Not Found",
+				type: "invalid_request_error",
+				param: null,
+				code: null,
+			},
+		};
+
+		return Response.json(errorBody, { status: 404 });
+	}
+
 	const modifiedResponse = new Response(response.body, {
 		status: response.status,
 		statusText: response.statusText,
