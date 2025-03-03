@@ -1,8 +1,21 @@
+import { handleAuth } from "./auth";
+import { handleModelListRequest } from "./models";
+import { relayLLMRequest } from "./relay";
+
 export default {
     async fetch(request: Request) {
         // Handle OPTIONS requests to allow CORS
         if (request.method === "OPTIONS") {
             return handleOPTIONS();
+        }
+
+        // Handle / endpoint
+        if (request.url === "/") {
+            const body = {
+                message: "Welcome to the LLM API",
+            }
+
+            return Response.json(body);
         }
 
         // Get URL path
@@ -21,8 +34,47 @@ export default {
             return handleProxy(request, "/proxy/anthropic", "api.anthropic.com");
         }
 
+        // API key protected routes
+        if (path.startsWith("/v1")) {
+            const isAuthenticated = handleAuth(request);
+
+            if (!isAuthenticated) {
+                const errorBody = {
+                    error: {
+                        message: "Invalid API key",
+                        type: "invalid_api_key",
+                        param: null,
+                        code: null
+                    }
+                }
+
+                return Response.json(errorBody, { status: 401 });
+            }
+
+            if (path === "/v1/models") {
+                return handleModelListRequest();
+            }
+
+            if (path === "/v1/chat/completions") {
+                return relayLLMRequest(request);
+            }
+
+            if (path === "/v1/embeddings") {
+                return relayLLMRequest(request);
+            }
+        }
+
+        const errorBody = {
+            error: {
+                message: "Not Found",
+                type: "invalid_request_error",
+                param: null,
+                code: null
+            }
+        }
+
         // Return 404 for all other requests
-        return new Response("Not Found", { status: 404 });
+        return Response.json(errorBody, { status: 404 });
     }
 };
 
