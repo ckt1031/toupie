@@ -1,14 +1,17 @@
 {
-  "name": "llm-relay-api",
-  "version": "0.0.1",
-  "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "vercel deploy . --prod --no-wait"
-  },
-  "devDependencies": {
-    "@types/bun": "^1.2.4",
-    "@types/node": "^22.13.8",
-    "vercel": "^41.3.0",
-    "wrangler": "^3.111.0"
-  }
+	"name": "llm-relay-api",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "wrangler dev",
+		"lint": "biome lint",
+		"lint:fix": "biome check --write .",
+		"deploy": "vercel deploy . --prod --no-wait"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"@types/bun": "^1.2.4",
+		"@types/node": "^22.13.8",
+		"vercel": "^41.3.0",
+		"wrangler": "^3.111.0"
+	}
 }

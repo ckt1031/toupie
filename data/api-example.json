@@ -1,48 +1,36 @@
 {
-    "userKeys": [
-        {
-            "name": "Test",
-            "key": "sk-123456"
-        }
-    ],
-    "providers": {
-        "azure": {
-            "name": "Azure OpenAI",
-            "azure": true,
-            "azureAPIVersion": "2024-10-21",
-            "baseURL": "https://azure-openai.azure-api.net/v1",
-            "models": [
-                "gpt-4o",
-                "gpt-4o-mini"
-            ],
-            "keys": [
-                "123456"
-            ]
-        },
-        "openrouter": {
-            "name": "OpenRouter",
-            "baseURL": "https://openrouter.ai/api/v1",
-            "models": [
-                {
-                    "request": "gpt-4o-mini",
-                    "destination": "openai/gpt-4o-mini"
-                },
-                "openai/gpt-4o"
-            ],
-            "keys": [
-                "sk-12345"
-            ]
-        },
-        "google-genai": {
-            "name": "Google GenAI",
-            "baseURL": "https://generativelanguage.googleapis.com/v1beta/openai",
-            "models": [
-                "gemini-1.5-flash-latest",
-                "gemini-1.5-pro-latest"
-            ],
-            "keys": [
-                "AIzaSyB1234567890"
-            ]
-        }
-    }
+	"userKeys": [
+		{
+			"name": "Test",
+			"key": "sk-123456"
+		}
+	],
+	"providers": {
+		"azure": {
+			"name": "Azure OpenAI",
+			"azure": true,
+			"azureAPIVersion": "2024-10-21",
+			"baseURL": "https://azure-openai.azure-api.net/v1",
+			"models": ["gpt-4o", "gpt-4o-mini"],
+			"keys": ["123456"]
+		},
+		"openrouter": {
+			"name": "OpenRouter",
+			"baseURL": "https://openrouter.ai/api/v1",
+			"models": [
+				{
+					"request": "gpt-4o-mini",
+					"destination": "openai/gpt-4o-mini"
+				},
+				"openai/gpt-4o"
+			],
+			"keys": ["sk-12345"]
+		},
+		"google-genai": {
+			"name": "Google GenAI",
+			"baseURL": "https://generativelanguage.googleapis.com/v1beta/openai",
+			"models": ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest"],
+			"keys": ["AIzaSyB1234567890"]
+		}
+	}
 }

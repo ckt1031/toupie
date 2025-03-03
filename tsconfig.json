@@ -1,12 +1,12 @@
 {
-    "compilerOptions": {
-        "resolveJsonModule": true,
-        "lib": ["ESNext", "DOM"],
-        "module": "NodeNext",
-        "target": "ESNext",
-        "strict": true,
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true
-    }
+	"compilerOptions": {
+		"resolveJsonModule": true,
+		"lib": ["ESNext", "DOM"],
+		"module": "NodeNext",
+		"target": "ESNext",
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true
+	}
 }
