@@ -1,6 +1,23 @@
 # LLM Relay API
 
-## api.json Format
+This is a OpenAI API relay server, which can be used to relay requests to multiple providers.
+
+The project supports serverless deployment on Vercel.
+
+## Installation
+
+```bash
+bun install
+```
+
+## Usage
+
+```bash
+bun run dev
+bun run deploy # Deploy to Vercel
+```
+
+## File `api.json` Format
 
 Make sure all provider supports OpenAI API format.
 

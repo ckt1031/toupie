@@ -1,9 +1,14 @@
 {
-  "dependencies": {
-    "@whatwg-node/server": "^0.9.70"
+  "name": "llm-relay-api",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "vercel deploy . --prod --no-wait"
   },
   "devDependencies": {
     "@types/bun": "^1.2.4",
-    "@types/node": "^22.13.8"
+    "@types/node": "^22.13.8",
+    "vercel": "^41.3.0",
+    "wrangler": "^3.111.0"
   }
 }
