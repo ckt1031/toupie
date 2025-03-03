@@ -3,6 +3,18 @@
         {
             "source": "/(.*)",
             "destination": "api/handler"
+        },
+        {
+            "source": "/",
+            "destination": "public/index.html"
+        },
+        {
+            "source": "/favicon.ico",
+            "destination": "public/favicon.ico"
+        },
+        {
+            "source": "/favicon.png",
+            "destination": "public/android-chrome-192x192.png"
         }
     ]
 }
