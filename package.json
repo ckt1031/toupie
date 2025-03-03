@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@whatwg-node/server": "^0.9.70"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.4",
+    "@types/node": "^22.13.8"
+  }
+}
