@@ -23,7 +23,7 @@ export async function relayLLMRequest(request: Request) {
 
     const headers = new Headers(request.headers);
 
-    if (channel.provider.azure) {
+    if (channel.provider.isAzure) {
         url = request.url.replace(/^https?:.*\/v1/, channel.provider.baseURL + `/openai/deployments/${channel.provider.model}`);
         url += `?api-version=${channel.provider.azureAPIVersion}`;
 

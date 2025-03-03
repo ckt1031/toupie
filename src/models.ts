@@ -9,7 +9,7 @@ interface Model {
 
 export function handleModelListRequest() {
     console.info("Handling model list request");
-    
+
     const list: Model[] = []
 
     for (const provider of Object.values(apiConfig.providers)) {
@@ -17,9 +17,7 @@ export function handleModelListRequest() {
             const modelId = typeof model === "string" ? model : model.request;
 
             // Check if there is the same model in the list
-            const existingModel = list.find((m) => m.id === modelId);
-
-            if (existingModel) continue;
+            if (list.find((m) => m.id === modelId)) continue;
 
             // Reject if embed is in modelId
             if (modelId.includes("embed")) continue;
@@ -70,22 +68,20 @@ export function pickModelChannel(modelId: string) {
     const key = provider.keys[randomKeyIndex];
 
     // Handle model request
-    const model = provider.models.find((m) => {
-        if (typeof m === "string") return m === modelId;
-
-        return m.request === modelId;
-    });
+    const model = provider.models.find(
+        (m) => typeof m === "string" ? m === modelId : m.request === modelId,
+    );
 
     if (!model) return null;
 
     return {
+        key,
         provider: {
             name: provider.name,
             model: typeof model === "string" ? model : model.destination,
             baseURL: provider.baseURL,
-            azure: "azure" in provider ? (provider.azure as boolean) : false,
+            isAzure: "azure" in provider ? (provider.azure as boolean) : false,
             azureAPIVersion: "azureAPIVersion" in provider ? (provider.azureAPIVersion as string) : undefined,
         },
-        key,
     }
 }

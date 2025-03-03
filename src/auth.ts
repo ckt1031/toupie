@@ -5,15 +5,19 @@ import apiConfig from "../data/api.json";
  */
 export function handleAuth(request: Request): boolean {
     const headers = request.headers;
-    const key = headers.get("Authorization")?.replace("Bearer ", "");
+    const authorization = headers.get("Authorization")
+
+    if (!authorization) return false;
+    
+    const key = authorization.replace("Bearer ", "");
 
     if (!key) return false;
 
-    const keyData = apiConfig.userKeys.find((userKey) => userKey.key === key);
+    const keyData = apiConfig.userKeys.find(i => i.key === key);
 
     if (!keyData) return false;
 
-    console.info(`Key request: ${keyData.name}`);
+    console.info(`Key: ${keyData.name}`);
 
     return true;
 }
