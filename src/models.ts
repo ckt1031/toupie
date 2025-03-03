@@ -19,6 +19,9 @@ export function handleModelListRequest() {
 
             if (existingModel) continue;
 
+            // Reject if embed is in modelId
+            if (modelId.includes("embed")) continue;
+
             list.push({
                 id: modelId,
                 object: "model",
