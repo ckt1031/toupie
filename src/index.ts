@@ -1,4 +1,5 @@
 import { handleAuth } from "./auth";
+import { handleOPTIONS, setResponseCORSHeaders } from "./headers";
 import { handleModelListRequest } from "./models";
 import { relayLLMRequest } from "./relay";
 
@@ -89,8 +90,7 @@ const handleProxy = async (request: Request, path: string, host: string) => {
 	console.info(`Proxying request to ${url}`);
 
 	const headers = new Headers(request.headers);
-
-	// Remove the host header
+	// Remove the host header to prevent DNS issue
 	headers.delete("host");
 
 	const modifiedRequest = new Request(url, {
@@ -121,20 +121,6 @@ const handleProxy = async (request: Request, path: string, host: string) => {
 		headers: response.headers,
 	});
 
-	// Add CORS headers
-	modifiedResponse.headers.set("Access-Control-Allow-Origin", "*");
-	modifiedResponse.headers.set("Access-Control-Allow-Methods", "*");
-	modifiedResponse.headers.set("Access-Control-Allow-Headers", "*");
-
-	return modifiedResponse;
-};
-
-const handleOPTIONS = async () => {
-	return new Response(null, {
-		headers: {
-			"Access-Control-Allow-Origin": "*",
-			"Access-Control-Allow-Methods": "*",
-			"Access-Control-Allow-Headers": "*",
-		},
-	});
+	// Add CORS headers to the response
+	return setResponseCORSHeaders(modifiedResponse);
 };

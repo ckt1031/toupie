@@ -1,3 +1,4 @@
+import { setResponseCORSHeaders } from "./headers";
 import { pickModelChannel } from "./models";
 
 export async function relayLLMRequest(request: Request) {
@@ -22,8 +23,7 @@ export async function relayLLMRequest(request: Request) {
 	let url: string;
 
 	const headers = new Headers(request.headers);
-
-	// remove host header
+	// remove host header to prevent DNS issue
 	headers.delete("host");
 
 	if (channel.provider.isAzure) {
@@ -57,10 +57,5 @@ export async function relayLLMRequest(request: Request) {
 		headers: response.headers,
 	});
 
-	// Add CORS headers
-	modifiedResponse.headers.set("Access-Control-Allow-Origin", "*");
-	modifiedResponse.headers.set("Access-Control-Allow-Methods", "*");
-	modifiedResponse.headers.set("Access-Control-Allow-Headers", "*");
-
-	return modifiedResponse;
+	return setResponseCORSHeaders(modifiedResponse);
 }

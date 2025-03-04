@@ -1,4 +1,5 @@
 import apiConfig from "../data/api.json";
+import { corsHeaders } from "./headers";
 
 interface Model {
 	id: string;
@@ -36,13 +37,7 @@ export function handleModelListRequest() {
 		data: list,
 	};
 
-	const headers = {
-		"Access-Control-Allow-Origin": "*",
-		"Access-Control-Allow-Methods": "*",
-		"Access-Control-Allow-Headers": "*",
-	};
-
-	return new Response(JSON.stringify(data), { headers });
+	return Response.json(data, { headers: corsHeaders });
 }
 
 /**
@@ -50,11 +45,9 @@ export function handleModelListRequest() {
  */
 export function pickModelChannel(modelId: string) {
 	const providers = Object.values(apiConfig.providers).filter((provider) =>
-		provider.models.some((m) => {
-			if (typeof m === "string") return m === modelId;
-
-			return m.request === modelId;
-		}),
+		provider.models.some((m) =>
+			typeof m === "string" ? m === modelId : m.request === modelId,
+		),
 	);
 
 	if (providers.length === 0) return null;
