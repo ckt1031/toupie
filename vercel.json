@@ -5,6 +5,10 @@
 			"destination": "api/handler"
 		},
 		{
+			"source": "/robots.txt",
+			"destination": "public/robots.txt"
+		},
+		{
 			"source": "/",
 			"destination": "public/index.html"
 		},
