@@ -7,12 +7,14 @@ export async function relayLLMRequest(request: Request) {
 	const model: string | undefined = body.model;
 
 	if (!model) {
+		console.error("Model is required");
 		return new Response("Model is required", { status: 400 });
 	}
 
 	const channel = pickModelChannel(model);
 
 	if (!channel) {
+		console.error("Model not found");
 		return new Response("Model not found", { status: 404 });
 	}
 

@@ -78,6 +78,8 @@ export default {
 			},
 		};
 
+		console.error("No matching route found");
+
 		// Return 404 for all other requests
 		return Response.json(errorBody, { status: 404 });
 	},
@@ -103,6 +105,8 @@ const handleProxy = async (request: Request, path: string, host: string) => {
 	const response = await fetch(modifiedRequest);
 
 	if (response.status === 404) {
+		console.error("Proxy request failed with 404");
+		
 		const errorBody = {
 			error: {
 				message: "Not Found",
