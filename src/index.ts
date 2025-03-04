@@ -106,7 +106,7 @@ const handleProxy = async (request: Request, path: string, host: string) => {
 
 	if (response.status === 404) {
 		console.error("Proxy request failed with 404");
-		
+
 		const errorBody = {
 			error: {
 				message: "Not Found",

@@ -7,15 +7,17 @@ export async function relayLLMRequest(request: Request) {
 	const model: string | undefined = body.model;
 
 	if (!model) {
-		console.error("Model is required");
-		return new Response("Model is required", { status: 400 });
+		const erorrMessage = "Model is required";
+		console.error(erorrMessage);
+		return new Response(erorrMessage, { status: 400 });
 	}
 
 	const channel = pickModelChannel(model);
 
 	if (!channel) {
-		console.error("Model not found");
-		return new Response("Model not found", { status: 404 });
+		const erorrMessage = `Model ${model} not found`;
+		console.error(erorrMessage);
+		return new Response(erorrMessage, { status: 404 });
 	}
 
 	// Replace request.body model with the model id as we need to cast models
@@ -51,19 +53,24 @@ export async function relayLLMRequest(request: Request) {
 		`Model: ${body.model}, Provider: ${channel.provider.name}, URL: ${url}`,
 	);
 
-	const modifiedRequest = new Request(url, {
-		headers,
-		method: request.method,
-		body: JSON.stringify(body),
-		redirect: "follow",
-	});
+	try {
+		const modifiedRequest = new Request(url, {
+			headers,
+			method: request.method,
+			body: JSON.stringify(body),
+			redirect: "follow",
+		});
 
-	const response = await fetch(modifiedRequest);
-	const modifiedResponse = new Response(response.body, {
-		status: response.status,
-		statusText: response.statusText,
-		headers: response.headers,
-	});
+		const response = await fetch(modifiedRequest);
+		const modifiedResponse = new Response(response.body, {
+			status: response.status,
+			statusText: response.statusText,
+			headers: response.headers,
+		});
 
-	return setResponseCORSHeaders(modifiedResponse);
+		return setResponseCORSHeaders(modifiedResponse);
+	} catch (error) {
+		console.error("Error while fetching the response", error);
+		return new Response("Internal Server Error", { status: 500 });
+	}
 }
