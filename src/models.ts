@@ -68,7 +68,10 @@ export function pickModelChannel(modelId: string) {
 	if (!model) return null;
 
 	return {
-		key,
+		apiKey: {
+			index: randomKeyIndex,
+			value: key,
+		},
 		provider: {
 			name: provider.name,
 			model: typeof model === "string" ? model : model.destination,

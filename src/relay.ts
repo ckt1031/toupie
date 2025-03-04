@@ -16,7 +16,7 @@ export async function relayLLMRequest(request: Request) {
 		return new Response("Model not found", { status: 404 });
 	}
 
-	// Replace request.body model with the model id
+	// Replace request.body model with the model id as we need to cast models
 	body.model = channel.provider.model;
 
 	// Replace the baseURL with the provider's baseURL
@@ -33,15 +33,21 @@ export async function relayLLMRequest(request: Request) {
 		);
 		url += `?api-version=${channel.provider.azureAPIVersion}`;
 
-		headers.set("api-key", channel.key);
+		headers.set("api-key", channel.apiKey.value);
 	} else {
 		url = request.url.replace(/^https?:.*\/v1/, channel.provider.baseURL);
 
-		headers.set("Authorization", `Bearer ${channel.key}`);
+		headers.set("Authorization", `Bearer ${channel.apiKey.value}`);
 	}
 
-	console.info(`Provider: ${channel.provider.name}, URL: ${url}`);
-	console.info(`Requested Model: ${body.model}`);
+	// Add extra meta information to trace the requests
+	headers.set("X-Provider", channel.provider.name);
+	headers.set("X-Key-Index", channel.apiKey.index.toString());
+
+	// Print details to console
+	console.info(
+		`Model: ${body.model}, Provider: ${channel.provider.name}, URL: ${url}`,
+	);
 
 	const modifiedRequest = new Request(url, {
 		headers,
