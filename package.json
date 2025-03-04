@@ -1,6 +1,7 @@
 {
 	"name": "llm-relay-api",
 	"version": "0.0.1",
+	"type": "module",
 	"scripts": {
 		"dev": "wrangler dev",
 		"lint": "biome lint",
