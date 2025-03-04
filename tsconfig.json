@@ -2,7 +2,8 @@
 	"compilerOptions": {
 		"resolveJsonModule": true,
 		"lib": ["ESNext", "DOM"],
-		"module": "NodeNext",
+		"moduleResolution": "bundler",
+		"module": "ESNext",
 		"target": "ESNext",
 		"strict": true,
 		"esModuleInterop": true,

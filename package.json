@@ -4,14 +4,15 @@
 	"type": "module",
 	"scripts": {
 		"dev": "wrangler dev",
-		"lint": "biome lint",
-		"lint:fix": "biome check --write .",
+		"lint": "tsc --noEmit && biome lint",
+		"lint:fix": "tsc --noEmit && biome check --write .",
 		"deploy": "vercel deploy . --prod --no-wait"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
 		"@types/bun": "^1.2.4",
 		"@types/node": "^22.13.8",
+		"typescript": "^5.8.2",
 		"vercel": "^41.3.0",
 		"wrangler": "^3.111.0"
 	}
