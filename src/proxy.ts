@@ -23,8 +23,6 @@ export const handleProxy = async (
 	const re = new RegExp(`^https?://.*${path}`);
 	const url = request.url.replace(re, `https://${host}`);
 
-	console.info(`Proxying request to ${url}`);
-
 	const headers = new Headers(request.headers);
 	// Remove the host header to prevent DNS issue
 	headers.delete("host");
