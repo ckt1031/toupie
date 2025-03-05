@@ -1,6 +1,7 @@
 import { handleAuth } from "./auth";
 import { handleOPTIONS, setResponseCORSHeaders } from "./headers";
 import { handleModelListRequest } from "./models";
+import { handleProxy, proxyList } from "./proxy";
 import { relayLLMRequest } from "./relay";
 
 export default {
@@ -22,21 +23,11 @@ export default {
 			return Response.json(body);
 		}
 
-		// Handle /proxy/google-genai
-		if (path.startsWith("/proxy/google-genai")) {
-			return handleProxy(
-				request,
-				"/proxy/google-genai",
-				"generativelanguage.googleapis.com",
-			);
-		}
-
-		if (path.startsWith("/proxy/openai")) {
-			return handleProxy(request, "/proxy/openai", "api.openai.com");
-		}
-
-		if (path.startsWith("/proxy/anthropic")) {
-			return handleProxy(request, "/proxy/anthropic", "api.anthropic.com");
+		// Proxy requests
+		for (const proxy of proxyList) {
+			if (path.startsWith(proxy.path)) {
+				return handleProxy(request, proxy.path, proxy.host);
+			}
 		}
 
 		// API key protected routes
@@ -83,48 +74,4 @@ export default {
 		// Return 404 for all other requests
 		return Response.json(errorBody, { status: 404 });
 	},
-};
-
-const handleProxy = async (request: Request, path: string, host: string) => {
-	const re = new RegExp(`^https?://.*${path}`);
-	const url = request.url.replace(re, `https://${host}`);
-
-	console.info(`Proxying request to ${url}`);
-
-	const headers = new Headers(request.headers);
-	// Remove the host header to prevent DNS issue
-	headers.delete("host");
-
-	const modifiedRequest = new Request(url, {
-		headers,
-		method: request.method,
-		body: request.body,
-		redirect: "follow",
-	});
-
-	const response = await fetch(modifiedRequest);
-
-	if (response.status === 404) {
-		console.error("Proxy request failed with 404");
-
-		const errorBody = {
-			error: {
-				message: "Not Found",
-				type: "invalid_request_error",
-				param: null,
-				code: null,
-			},
-		};
-
-		return Response.json(errorBody, { status: 404 });
-	}
-
-	const modifiedResponse = new Response(response.body, {
-		status: response.status,
-		statusText: response.statusText,
-		headers: response.headers,
-	});
-
-	// Add CORS headers to the response
-	return setResponseCORSHeaders(modifiedResponse);
 };
