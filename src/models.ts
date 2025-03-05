@@ -9,8 +9,6 @@ interface Model {
 }
 
 export function handleModelListRequest() {
-	console.info("Handling model list request");
-
 	const list: Model[] = [];
 
 	for (const provider of Object.values(apiConfig.providers)) {
