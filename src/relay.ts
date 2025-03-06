@@ -26,7 +26,9 @@ export async function relayLLMRequest(request: Request) {
 	const contentType = request.headers.get("content-type");
 	const isBodyForm = contentType?.includes("multipart/form-data") ?? false;
 
-	const body: BodyType = isBodyForm ? await request.formData() : await request.json();
+	const body: BodyType = isBodyForm
+		? await request.formData()
+		: await request.json();
 	const model: string | undefined = await getValueFromBody(body, "model");
 
 	if (!model) {

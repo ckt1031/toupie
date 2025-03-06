@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as readline from "node:readline/promises";
 import chalk from "chalk";
+import slugify from "slugify";
 import { z } from "zod";
 import { generateKey } from "./src/crypto";
 
@@ -243,7 +244,7 @@ async function addProvider(config: APIConfig): Promise<APIConfig> {
 	const keysInput = await rl.question("Enter API keys (comma-separated): ");
 	const keys = keysInput.split(",").map((key) => key.trim());
 
-	config.providers[name] = {
+	config.providers[slugify(name)] = {
 		name,
 		baseURL,
 		models,
