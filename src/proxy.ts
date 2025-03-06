@@ -13,6 +13,10 @@ export const proxyList = [
 		path: "/proxy/anthropic",
 		host: "api.anthropic.com",
 	},
+	{
+		path: "/proxy/groq",
+		host: "api.groq.com",
+	},
 ];
 
 export const handleProxy = async (
@@ -50,7 +54,7 @@ export const handleProxy = async (
 
 		return Response.json(errorBody, { status: 404 });
 	}
-	
+
 	try {
 		const modifiedResponse = new Response(response.body, {
 			status: response.status,
