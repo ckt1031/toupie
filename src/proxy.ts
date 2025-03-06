@@ -50,13 +50,21 @@ export const handleProxy = async (
 
 		return Response.json(errorBody, { status: 404 });
 	}
+	
+	try {
+		const modifiedResponse = new Response(response.body, {
+			status: response.status,
+			statusText: response.statusText,
+			headers: response.headers,
+		});
 
-	const modifiedResponse = new Response(response.body, {
-		status: response.status,
-		statusText: response.statusText,
-		headers: response.headers,
-	});
+		// Add CORS headers to the response
+		return setResponseCORSHeaders(modifiedResponse);
+	} catch (error) {
+		if (error instanceof TypeError) {
+			console.error("Error while fetching the response", error.message);
+		}
 
-	// Add CORS headers to the response
-	return setResponseCORSHeaders(modifiedResponse);
+		return new Response("Internal Server Error", { status: 500 });
+	}
 };
