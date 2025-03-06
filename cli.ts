@@ -55,11 +55,149 @@ async function saveApiConfig(config: APIConfig): Promise<void> {
 	}
 }
 
+async function chooseProvider(config: APIConfig): Promise<string> {
+	// List providers with numbers
+	console.log(chalk.cyan("\nAvailable Providers:"));
+	const providerList = Object.keys(config.providers);
+	providerList.forEach((providerName, index) => {
+		console.log(
+			`${index + 1}\t${config.providers[providerName].name} (${providerName})`,
+		);
+	});
+	const choice = await rl.question(chalk.yellow("Enter the provider number: "));
+
+	const providerIndex = Number.parseInt(choice) - 1;
+
+	return providerList[providerIndex];
+}
+
 async function addUserApiKey(config: APIConfig): Promise<APIConfig> {
 	const name = await rl.question("Enter user API key name: ");
 	const key = `sk-${generateKey()}`;
 	config.userKeys.push({ name, key });
 	console.log(chalk.green(`Generated API key: ${key}`));
+	return config;
+}
+
+async function chooseUserAPIKeyName(config: APIConfig): Promise<string> {
+	console.log(chalk.cyan("\nAvailable User API Keys:"));
+
+	config.userKeys.forEach((key, index) => {
+		console.log(`${index + 1}\t${key.name}`);
+	});
+
+	const choice = await rl.question(chalk.yellow("Enter the key number: "));
+
+	const keyIndex = Number.parseInt(choice) - 1;
+
+	return config.userKeys[keyIndex].name;
+}
+
+async function removeUserApiKey(config: APIConfig): Promise<APIConfig> {
+	const name = await chooseUserAPIKeyName(config);
+	const confirmation = await rl.question(
+		chalk.yellow(`Type "confirm" to remove API key "${name}": `),
+	);
+
+	if (confirmation.toLowerCase() !== "confirm") {
+		console.log(chalk.red("Removal cancelled."));
+		return config;
+	}
+
+	config.userKeys = config.userKeys.filter((key) => key.name !== name);
+	console.log(chalk.green(`API key "${name}" removed successfully.`));
+	return config;
+}
+
+async function removeProvider(config: APIConfig): Promise<APIConfig> {
+	const providerName = await chooseProvider(config);
+	const confirmation = await rl.question(
+		chalk.yellow(`Type "confirm" to remove provider "${providerName}": `),
+	);
+
+	if (confirmation.toLowerCase() !== "confirm") {
+		console.log(chalk.red("Removal cancelled."));
+		return config;
+	}
+
+	delete config.providers[providerName];
+
+	console.log(chalk.green(`Provider "${providerName}" removed successfully.`));
+
+	return config;
+}
+
+async function removeKeyFromExistingProvider(
+	config: APIConfig,
+): Promise<APIConfig> {
+	const providerName = await chooseProvider(config);
+
+	if (!config.providers[providerName]) {
+		console.log(chalk.yellow("Provider not found."));
+		return config;
+	}
+
+	const keyToRemove = await rl.question("Enter the API key to remove: ");
+	const confirmation = await rl.question(
+		chalk.yellow(
+			`Type "confirm" to remove key "${keyToRemove}" from provider "${providerName}": `,
+		),
+	);
+
+	if (confirmation.toLowerCase() !== "confirm") {
+		console.log(chalk.red("Removal cancelled."));
+		return config;
+	}
+
+	config.providers[providerName].keys = config.providers[
+		providerName
+	].keys.filter((key) => key !== keyToRemove);
+
+	console.log(
+		chalk.green(
+			`API key "${keyToRemove}" removed from provider "${providerName}" successfully.`,
+		),
+	);
+	return config;
+}
+
+async function removeModelFromExistingProvider(
+	config: APIConfig,
+): Promise<APIConfig> {
+	const providerName = await chooseProvider(config);
+
+	if (!config.providers[providerName]) {
+		console.log(chalk.yellow("Provider not found."));
+		return config;
+	}
+
+	const modelToRemove = await rl.question("Enter the model to remove: ");
+	const confirmation = await rl.question(
+		chalk.yellow(
+			`Type "confirm" to remove model "${modelToRemove}" from provider "${providerName}": `,
+		),
+	);
+
+	if (confirmation.toLowerCase() !== "confirm") {
+		console.log(chalk.red("Removal cancelled."));
+		return config;
+	}
+
+	config.providers[providerName].models = config.providers[
+		providerName
+	].models.filter((model) => {
+		if (typeof model === "string") {
+			return model !== modelToRemove;
+		}
+		return model.request !== modelToRemove;
+	});
+
+	console.log(
+		chalk.green(
+			`Model "${modelToRemove}" removed from provider "${providerName}" successfully.`,
+		),
+	);
+
 	return config;
 }
 
@@ -84,7 +222,7 @@ async function addProvider(config: APIConfig): Promise<APIConfig> {
 	let addMoreModels = true;
 
 	while (addMoreModels) {
-		const modelName = await rl.question("Enter model name: ");
+		const modelName = await rl.question("Enter request model name: ");
 		const needsCastingInput = await rl.question(
 			`Does ${modelName} need casting? (yes/no): `,
 		);
@@ -116,9 +254,7 @@ async function addProvider(config: APIConfig): Promise<APIConfig> {
 }
 
 async function addKeyToExistingProvider(config: APIConfig): Promise<APIConfig> {
-	const providerName = await rl.question(
-		"Enter the name of the provider to add the key to: ",
-	);
+	const providerName = await chooseProvider(config);
 
 	if (!config.providers[providerName]) {
 		console.log(chalk.yellow("Provider not found."));
@@ -138,9 +274,7 @@ async function addKeyToExistingProvider(config: APIConfig): Promise<APIConfig> {
 async function addModelToExistingProvider(
 	config: APIConfig,
 ): Promise<APIConfig> {
-	const providerName = await rl.question(
-		"Enter the name of the provider to add the model to: ",
-	);
+	const providerName = await chooseProvider(config);
 
 	if (!config.providers[providerName]) {
 		console.log("Provider not found.");
@@ -173,9 +307,7 @@ async function addModelToExistingProvider(
 }
 
 async function modifyProviderSettings(config: APIConfig): Promise<APIConfig> {
-	const providerName = await rl.question(
-		"Enter the name of the provider to modify: ",
-	);
+	const providerName = await chooseProvider(config);
 
 	if (!config.providers[providerName]) {
 		console.log("Provider not found.");
@@ -261,6 +393,22 @@ async function displayMenu(config: APIConfig): Promise<void> {
 			action: modifyProviderSettings,
 		},
 		{
+			name: "Remove User API Key",
+			action: removeUserApiKey,
+		},
+		{
+			name: "Remove Provider",
+			action: removeProvider,
+		},
+		{
+			name: "Remove Key from Existing Provider",
+			action: removeKeyFromExistingProvider,
+		},
+		{
+			name: "Remove Model from Existing Provider",
+			action: removeModelFromExistingProvider,
+		},
+		{
 			name: "Validate API Config",
 			action: validateApiConfig,
 		},
@@ -269,13 +417,14 @@ async function displayMenu(config: APIConfig): Promise<void> {
 			action: () => {
 				console.log(chalk.red("Exiting..."));
 				rl.close();
+				process.exit(0);
 				return;
 			},
 		},
 	];
 
 	actions.forEach((action, index) => {
-		console.log(`${index + 1}. ${action.name}`);
+		console.log(`${index + 1}\t${action.name}`);
 	});
 
 	const choice = await rl.question(chalk.yellow("Enter your choice: "));
