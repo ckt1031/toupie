@@ -44,10 +44,6 @@ export async function relayLLMRequest(request: Request) {
 		headers.set("Authorization", `Bearer ${channel.apiKey.value}`);
 	}
 
-	// Add extra meta information to trace the requests
-	headers.set("X-Provider", channel.provider.name);
-	headers.set("X-Key-Index", channel.apiKey.index.toString());
-
 	// Print details to console
 	console.info(
 		`Model: ${body.model}, Provider: ${channel.provider.name} (Key #${channel.apiKey.index})`,
@@ -66,6 +62,10 @@ export async function relayLLMRequest(request: Request) {
 		statusText: response.statusText,
 		headers: response.headers,
 	});
+
+	// Add extra meta information to trace the requests
+	modifiedResponse.headers.set("X-Provider", channel.provider.name);
+	modifiedResponse.headers.set("X-Key-Index", channel.apiKey.index.toString());
 
 	return setResponseCORSHeaders(modifiedResponse);
 }
