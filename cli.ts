@@ -1,262 +1,301 @@
 import * as fs from "node:fs";
 import * as readline from "node:readline/promises";
 import chalk from "chalk";
+import { z } from "zod";
 import { generateKey } from "./src/crypto";
 
 const apiConfigPath = "./data/api.json";
 
-interface ApiConfig {
-	userKeys: { name: string; key: string }[];
-	providers: {
-		[key: string]: {
-			name: string;
-			baseURL: string;
-			models: (string | { request: string; destination: string })[];
-			keys: string[];
-			azure?: boolean;
-			azureAPIVersion?: string;
-		};
-	};
+const apiConfigSchema = z.object({
+	userKeys: z.array(z.object({ name: z.string(), key: z.string() })),
+	providers: z.record(
+		z.object({
+			name: z.string(),
+			baseURL: z.string(),
+			models: z.array(
+				z.union([
+					z.string(),
+					z.object({ request: z.string(), destination: z.string() }),
+				]),
+			),
+			keys: z.array(z.string()),
+			azure: z.boolean().optional(),
+			azureAPIVersion: z.string().optional(),
+		}),
+	),
+});
+
+type APIConfig = z.infer<typeof apiConfigSchema>;
+
+const rl = readline.createInterface({
+	input: process.stdin,
+	output: process.stdout,
+});
+
+async function loadApiConfig(): Promise<APIConfig> {
+	try {
+		const data = await fs.promises.readFile(apiConfigPath, "utf-8");
+		return JSON.parse(data) as APIConfig;
+	} catch (error) {
+		console.error(chalk.red("Error loading api config:"), error);
+		return { userKeys: [], providers: {} };
+	}
 }
 
-async function main() {
-	const rl = readline.createInterface({
-		input: process.stdin,
-		output: process.stdout,
-	});
+async function saveApiConfig(config: APIConfig): Promise<void> {
+	try {
+		await fs.promises.writeFile(
+			apiConfigPath,
+			JSON.stringify(config, null, 4),
+			"utf-8",
+		);
+		console.log(chalk.green("API config saved successfully."));
+	} catch (error) {
+		console.error(chalk.red("Error saving api config:"), error);
+	}
+}
 
-	async function loadApiConfig(): Promise<ApiConfig> {
-		try {
-			const data = await fs.promises.readFile(apiConfigPath, "utf-8");
-			return JSON.parse(data) as ApiConfig;
-		} catch (error) {
-			console.error(chalk.red("Error loading api config:"), error);
-			return { userKeys: [], providers: {} };
-		}
+async function addUserApiKey(config: APIConfig): Promise<APIConfig> {
+	const name = await rl.question("Enter user API key name: ");
+	const key = `sk-${generateKey()}`;
+	config.userKeys.push({ name, key });
+	console.log(chalk.green(`Generated API key: ${key}`));
+	return config;
+}
+
+async function addProvider(config: APIConfig): Promise<APIConfig> {
+	const name = await rl.question("Enter provider name: ");
+	const baseURL = await rl.question(
+		"Enter base URL (e.g., https://api.example.com/v1): ",
+	);
+	const isAzureInput = await rl.question(
+		"Is this an Azure provider? (yes/no): ",
+	);
+	const isAzure = isAzureInput.toLowerCase() === "yes";
+
+	let azureAPIVersion: string | undefined = undefined;
+	if (isAzure) {
+		azureAPIVersion = await rl.question(
+			"Enter Azure API Version (e.g., 2024-10-21): ",
+		);
 	}
 
-	async function saveApiConfig(config: ApiConfig): Promise<void> {
-		try {
-			await fs.promises.writeFile(
-				apiConfigPath,
-				JSON.stringify(config, null, 4),
-				"utf-8",
+	const models: (string | { request: string; destination: string })[] = [];
+	let addMoreModels = true;
+
+	while (addMoreModels) {
+		const modelName = await rl.question("Enter model name: ");
+		const needsCastingInput = await rl.question(
+			`Does ${modelName} need casting? (yes/no): `,
+		);
+
+		if (needsCastingInput.toLowerCase() === "yes") {
+			const destination = await rl.question(
+				`Enter destination model for ${modelName}: `,
 			);
-			console.log(chalk.green("API config saved successfully."));
-		} catch (error) {
-			console.error(chalk.red("Error saving api config:"), error);
+			models.push({ request: modelName, destination });
+		} else {
+			models.push(modelName);
 		}
+
+		const addMore = await rl.question("Add another model? (yes/no): ");
+		addMoreModels = addMore.toLowerCase() === "yes";
 	}
 
-	async function addUserApiKey(config: ApiConfig): Promise<ApiConfig> {
-		const name = await rl.question("Enter user API key name: ");
-		const key = `sk-${generateKey()}`;
-		config.userKeys.push({ name, key });
-		console.log(chalk.green(`Generated API key: ${key}`));
+	const keysInput = await rl.question("Enter API keys (comma-separated): ");
+	const keys = keysInput.split(",").map((key) => key.trim());
+
+	config.providers[name] = {
+		name,
+		baseURL,
+		models,
+		keys,
+		...(isAzure ? { azure: isAzure, azureAPIVersion: azureAPIVersion } : {}),
+	};
+	return config;
+}
+
+async function addKeyToExistingProvider(config: APIConfig): Promise<APIConfig> {
+	const providerName = await rl.question(
+		"Enter the name of the provider to add the key to: ",
+	);
+
+	if (!config.providers[providerName]) {
+		console.log(chalk.yellow("Provider not found."));
 		return config;
 	}
 
-	async function addProvider(config: ApiConfig): Promise<ApiConfig> {
-		const name = await rl.question("Enter provider name: ");
-		const baseURL = await rl.question(
-			"Enter base URL (e.g., https://api.example.com/v1): ",
-		);
-		const isAzureInput = await rl.question(
-			"Is this an Azure provider? (yes/no): ",
-		);
-		const isAzure = isAzureInput.toLowerCase() === "yes";
+	const keysInput = await rl.question("Enter API keys (comma-separated): ");
+	const keys = keysInput.split(",").map((key) => key.trim());
 
-		let azureAPIVersion: string | undefined = undefined;
-		if (isAzure) {
-			azureAPIVersion = await rl.question(
-				"Enter Azure API Version (e.g., 2024-10-21): ",
-			);
-		}
+	config.providers[providerName].keys = [
+		...config.providers[providerName].keys,
+		...keys,
+	];
+	return config;
+}
 
-		const models: (string | { request: string; destination: string })[] = [];
-		let addMoreModels = true;
+async function addModelToExistingProvider(
+	config: APIConfig,
+): Promise<APIConfig> {
+	const providerName = await rl.question(
+		"Enter the name of the provider to add the model to: ",
+	);
 
-		while (addMoreModels) {
-			const modelName = await rl.question("Enter model name: ");
-			const needsCastingInput = await rl.question(
-				`Does ${modelName} need casting? (yes/no): `,
-			);
-
-			if (needsCastingInput.toLowerCase() === "yes") {
-				const destination = await rl.question(
-					`Enter destination model for ${modelName}: `,
-				);
-				models.push({ request: modelName, destination });
-			} else {
-				models.push(modelName);
-			}
-
-			const addMore = await rl.question("Add another model? (yes/no): ");
-			addMoreModels = addMore.toLowerCase() === "yes";
-		}
-
-		const keysInput = await rl.question("Enter API keys (comma-separated): ");
-		const keys = keysInput.split(",").map((key) => key.trim());
-
-		config.providers[name] = {
-			name,
-			baseURL,
-			models,
-			keys,
-			...(isAzure ? { azure: isAzure, azureAPIVersion: azureAPIVersion } : {}),
-		};
+	if (!config.providers[providerName]) {
+		console.log("Provider not found.");
 		return config;
 	}
 
-	async function addKeyToExistingProvider(
-		config: ApiConfig,
-	): Promise<ApiConfig> {
-		const providerName = await rl.question(
-			"Enter the name of the provider to add the key to: ",
+	let addMoreModels = true;
+	while (addMoreModels) {
+		const modelName = await rl.question("Enter model name: ");
+		const needsCastingInput = await rl.question(
+			`Does ${modelName} need casting? (yes/no): `,
 		);
 
-		if (!config.providers[providerName]) {
-			console.log(chalk.yellow("Provider not found."));
-			return config;
-		}
-
-		const keysInput = await rl.question("Enter API keys (comma-separated): ");
-		const keys = keysInput.split(",").map((key) => key.trim());
-
-		config.providers[providerName].keys = [
-			...config.providers[providerName].keys,
-			...keys,
-		];
-		return config;
-	}
-
-	async function addModelToExistingProvider(
-		config: ApiConfig,
-	): Promise<ApiConfig> {
-		const providerName = await rl.question(
-			"Enter the name of the provider to add the model to: ",
-		);
-
-		if (!config.providers[providerName]) {
-			console.log("Provider not found.");
-			return config;
-		}
-
-		let addMoreModels = true;
-		while (addMoreModels) {
-			const modelName = await rl.question("Enter model name: ");
-			const needsCastingInput = await rl.question(
-				`Does ${modelName} need casting? (yes/no): `,
+		if (needsCastingInput.toLowerCase() === "yes") {
+			const destination = await rl.question(
+				`Enter destination model for ${modelName}: `,
 			);
-
-			if (needsCastingInput.toLowerCase() === "yes") {
-				const destination = await rl.question(
-					`Enter destination model for ${modelName}: `,
-				);
-				config.providers[providerName].models.push({
-					request: modelName,
-					destination,
-				});
-			} else {
-				config.providers[providerName].models.push(modelName);
-			}
-
-			const addMore = await rl.question("Add another model? (yes/no): ");
-			addMoreModels = addMore.toLowerCase() === "yes";
+			config.providers[providerName].models.push({
+				request: modelName,
+				destination,
+			});
+		} else {
+			config.providers[providerName].models.push(modelName);
 		}
+
+		const addMore = await rl.question("Add another model? (yes/no): ");
+		addMoreModels = addMore.toLowerCase() === "yes";
+	}
+	return config;
+}
+
+async function modifyProviderSettings(config: APIConfig): Promise<APIConfig> {
+	const providerName = await rl.question(
+		"Enter the name of the provider to modify: ",
+	);
+
+	if (!config.providers[providerName]) {
+		console.log("Provider not found.");
 		return config;
 	}
 
-	async function modifyProviderSettings(config: ApiConfig): Promise<ApiConfig> {
-		const providerName = await rl.question(
-			"Enter the name of the provider to modify: ",
-		);
+	const provider = config.providers[providerName]; // Create a copy
+	const newName =
+		(await rl.question(
+			`Enter new name (leave empty to keep "${provider.name}"): `,
+		)) || provider.name;
+	const newBaseURL =
+		(await rl.question(
+			`Enter new base URL (leave empty to keep "${provider.baseURL}"): `,
+		)) || provider.baseURL;
 
-		if (!config.providers[providerName]) {
-			console.log("Provider not found.");
-			return config;
-		}
+	const isAzureInput = await rl.question(
+		`Is this an Azure provider? (yes/no, leave empty to keep "${provider.azure}"): `,
+	);
+	let isAzure: boolean = provider.azure ?? false;
+	if (isAzureInput !== "") {
+		isAzure = isAzureInput.toLowerCase() === "yes";
+	}
 
-		const provider = config.providers[providerName]; // Create a copy
-		const newName =
+	let azureAPIVersion: string | undefined = provider.azureAPIVersion;
+	if (isAzure) {
+		azureAPIVersion =
 			(await rl.question(
-				`Enter new name (leave empty to keep "${provider.name}"): `,
-			)) || provider.name;
-		const newBaseURL =
-			(await rl.question(
-				`Enter new base URL (leave empty to keep "${provider.baseURL}"): `,
-			)) || provider.baseURL;
-
-		const isAzureInput = await rl.question(
-			`Is this an Azure provider? (yes/no, leave empty to keep "${provider.azure}"): `,
-		);
-		let isAzure: boolean = provider.azure ?? false;
-		if (isAzureInput !== "") {
-			isAzure = isAzureInput.toLowerCase() === "yes";
-		}
-
-		let azureAPIVersion: string | undefined = provider.azureAPIVersion;
-		if (isAzure) {
-			azureAPIVersion =
-				(await rl.question(
-					`Enter Azure API Version (leave empty to keep "${provider.azureAPIVersion}"): `,
-				)) || provider.azureAPIVersion;
-		}
-
-		config.providers[providerName] = {
-			...provider,
-			name: newName,
-			baseURL: newBaseURL,
-			...(isAzure
-				? { azure: isAzure, azureAPIVersion: azureAPIVersion }
-				: { azure: false }),
-		};
-		return config;
+				`Enter Azure API Version (leave empty to keep "${provider.azureAPIVersion}"): `,
+			)) || provider.azureAPIVersion;
 	}
 
-	async function displayMenu(config: ApiConfig): Promise<void> {
-		console.log(chalk.cyan("\nChoose an action:"));
-		console.log(chalk.green("1. Add User API Key"));
-		console.log(chalk.green("2. Add Provider"));
-		console.log(chalk.green("3. Add Key to Existing Provider"));
-		console.log(chalk.green("4. Add Model to Existing Provider"));
-		console.log(chalk.green("5. Modify Provider Settings"));
-		console.log(chalk.green("6. Exit"));
+	config.providers[providerName] = {
+		...provider,
+		name: newName,
+		baseURL: newBaseURL,
+		...(isAzure
+			? { azure: isAzure, azureAPIVersion: azureAPIVersion }
+			: { azure: false }),
+	};
+	return config;
+}
 
-		const choice = await rl.question(chalk.yellow("Enter your choice: "));
+async function validateApiConfig(): Promise<void> {
+	try {
+		const data = await fs.promises.readFile(apiConfigPath, "utf-8");
+		const config = JSON.parse(data) as APIConfig;
+		// Basic validation - check if userKeys and providers are present
+		if (!config.userKeys || !config.providers) {
+			throw new Error("Config is missing userKeys or providers.");
+		}
+		// More detailed validation can be added here, e.g., using Zod
+		console.log(chalk.green("API config is valid."));
+	} catch (error) {
+		console.error(chalk.red("API config validation error:"), error);
+	}
+}
 
-		let updatedConfig: ApiConfig = config;
+async function displayMenu(config: APIConfig): Promise<void> {
+	console.log(chalk.cyan("\nChoose an action:"));
 
-		switch (choice) {
-			case "1":
-				updatedConfig = await addUserApiKey(config);
-				break;
-			case "2":
-				updatedConfig = await addProvider(config);
-				break;
-			case "3":
-				updatedConfig = await addKeyToExistingProvider(config);
-				break;
-			case "4":
-				updatedConfig = await addModelToExistingProvider(config);
-				break;
-			case "5":
-				updatedConfig = await modifyProviderSettings(config);
-				break;
-			case "6":
+	const actions = [
+		{
+			name: "Add User API Key",
+			action: addUserApiKey,
+		},
+		{
+			name: "Add Provider",
+			action: addProvider,
+		},
+		{
+			name: "Add Key to Existing Provider",
+			action: addKeyToExistingProvider,
+		},
+
+		{
+			name: "Add Model to Existing Provider",
+			action: addModelToExistingProvider,
+		},
+
+		{
+			name: "Modify Provider Settings",
+			action: modifyProviderSettings,
+		},
+		{
+			name: "Validate API Config",
+			action: validateApiConfig,
+		},
+		{
+			name: "Exit",
+			action: () => {
 				console.log(chalk.red("Exiting..."));
 				rl.close();
 				return;
-			default:
-				console.log(chalk.red("Invalid choice. Please try again."));
-		}
+			},
+		},
+	];
 
-		await saveApiConfig(updatedConfig);
-		displayMenu(updatedConfig); // Show the menu again
+	actions.forEach((action, index) => {
+		console.log(`${index + 1}. ${action.name}`);
+	});
+
+	const choice = await rl.question(chalk.yellow("Enter your choice: "));
+
+	let updatedConfig: APIConfig = config;
+
+	const actionIndex = Number.parseInt(choice) - 1;
+	if (actions[actionIndex]) {
+		const res = await actions[actionIndex].action(config);
+
+		const { success } = await apiConfigSchema.safeParseAsync(res);
+
+		if (res && success) updatedConfig = res;
+	} else {
+		console.log(chalk.red("Invalid choice. Please try again."));
 	}
 
-	const initialConfig = await loadApiConfig();
-	displayMenu(initialConfig);
+	await saveApiConfig(updatedConfig);
+	displayMenu(updatedConfig); // Show the menu again
 }
 
-main().catch(console.error);
+const initialConfig = await loadApiConfig();
+displayMenu(initialConfig);
