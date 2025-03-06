@@ -53,27 +53,19 @@ export async function relayLLMRequest(request: Request) {
 		`Model: ${body.model}, Provider: ${channel.provider.name} (Key #${channel.apiKey.index})`,
 	);
 
-	try {
-		const modifiedRequest = new Request(url, {
-			headers,
-			method: request.method,
-			body: JSON.stringify(body),
-			redirect: "follow",
-		});
+	const modifiedRequest = new Request(url, {
+		headers,
+		method: request.method,
+		body: JSON.stringify(body),
+		redirect: "follow",
+	});
 
-		const response = await fetch(modifiedRequest);
-		const modifiedResponse = new Response(response.body, {
-			status: response.status,
-			statusText: response.statusText,
-			headers: response.headers,
-		});
+	const response = await fetch(modifiedRequest);
+	const modifiedResponse = new Response(response.body, {
+		status: response.status,
+		statusText: response.statusText,
+		headers: response.headers,
+	});
 
-		return setResponseCORSHeaders(modifiedResponse);
-	} catch (error) {
-		if (error instanceof TypeError) {
-			console.error("Error while fetching the response", error.message);
-		}
-
-		return new Response("Internal Server Error", { status: 500 });
-	}
+	return setResponseCORSHeaders(modifiedResponse);
 }
