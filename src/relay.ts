@@ -1,52 +1,33 @@
 import { setResponseCORSHeaders } from "./headers";
 import { pickModelChannel } from "./models";
 
-function isBodyFormDataType(req: Request): boolean {
-	const contentType = req.headers.get("content-type");
+type BodyType = FormData | Record<string, string>;
 
-	if (!contentType) return false;
-
-	return contentType.includes("multipart/form-data");
-}
-
-async function getValueFromBody(req: Request, key: string) {
-	const clonedRequest = req.clone();
-	const isBodyForm = isBodyFormDataType(req);
-
-	if (isBodyForm) {
-		const body = await clonedRequest.formData();
-		return body.get(key);
-	}
-
-	const body = await clonedRequest.json();
-
+async function getValueFromBody(body: BodyType, key: string) {
+	if (body instanceof FormData) return body.get(key) as string;
 	return body[key];
 }
 
 async function modifyBodyWithStringValue(
-	req: Request,
+	body: BodyType,
 	name: string,
 	value: string,
 ): Promise<BodyInit> {
-	const clonedRequest = req.clone();
-	const isBodyForm = isBodyFormDataType(req);
-
-	if (isBodyForm) {
-		const body = await clonedRequest.formData();
+	if (body instanceof FormData) {
 		body.set(name, value);
-
 		return body;
 	}
 
-	const body: Record<string, string> = await clonedRequest.json();
-
 	body[name] = value;
-
 	return JSON.stringify(body);
 }
 
 export async function relayLLMRequest(request: Request) {
-	const model: string | undefined = await getValueFromBody(request, "model");
+	const contentType = request.headers.get("content-type");
+	const isBodyForm = contentType?.includes("multipart/form-data") ?? false;
+
+	const body: BodyType = isBodyForm ? await request.formData() : await request.json();
+	const model: string | undefined = await getValueFromBody(body, "model");
 
 	if (!model) {
 		const erorrMessage = "Model is required";
@@ -61,13 +42,6 @@ export async function relayLLMRequest(request: Request) {
 		console.error(erorrMessage);
 		return new Response(erorrMessage, { status: 404 });
 	}
-
-	// Replace request.body model with the model id as we need to cast models
-	const newBody = await modifyBodyWithStringValue(
-		request,
-		"model",
-		channel.provider.model,
-	);
 
 	// Replace the baseURL with the provider's baseURL
 	let url: string;
@@ -94,6 +68,13 @@ export async function relayLLMRequest(request: Request) {
 	// Print details to console
 	console.info(
 		`Model: ${channel.provider.model}, Provider: ${channel.provider.name} (Key #${channel.apiKey.index})`,
+	);
+
+	// Replace request.body model with the model id as we need to cast models
+	const newBody = await modifyBodyWithStringValue(
+		body,
+		"model",
+		channel.provider.model,
 	);
 
 	// Request to the provider
