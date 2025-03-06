@@ -58,6 +58,14 @@ export default {
 			if (path === "/v1/embeddings" && request.method === "POST") {
 				return relayLLMRequest(request);
 			}
+
+			if (path === "/v1/audio/transcriptions" && request.method === "POST") {
+				return relayLLMRequest(request);
+			}
+
+			if (path === "/v1/audio/translations" && request.method === "POST") {
+				return relayLLMRequest(request);
+			}
 		}
 
 		const errorBody = {

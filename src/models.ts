@@ -18,8 +18,8 @@ export function handleModelListRequest() {
 			// Check if there is the same model in the list
 			if (list.find((m) => m.id === modelId)) continue;
 
-			// Reject if embed is in modelId
-			if (modelId.includes("embed")) continue;
+			// Reject if model is not chat model
+			if (modelId.includes("embed") || modelId.includes("whisper")) continue;
 
 			list.push({
 				id: modelId,
