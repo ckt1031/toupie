@@ -25,7 +25,7 @@ export function handleModelListRequest() {
 				id: modelId,
 				object: "model",
 				created: 1686935002,
-				owned_by: "LLM",
+				owned_by: "openai",
 			});
 		}
 	}

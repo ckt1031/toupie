@@ -50,7 +50,7 @@ export async function relayLLMRequest(request: Request) {
 
 	// Print details to console
 	console.info(
-		`Model: ${body.model}, Provider: ${channel.provider.name}, URL: ${url}`,
+		`Model: ${body.model}, Provider: ${channel.provider.name} (Key #${channel.apiKey.index})`,
 	);
 
 	try {
@@ -70,7 +70,10 @@ export async function relayLLMRequest(request: Request) {
 
 		return setResponseCORSHeaders(modifiedResponse);
 	} catch (error) {
-		console.error("Error while fetching the response", error);
+		if (error instanceof TypeError) {
+			console.error("Error while fetching the response", error.message);
+		}
+
 		return new Response("Internal Server Error", { status: 500 });
 	}
 }
