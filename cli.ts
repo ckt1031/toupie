@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as readline from "node:readline/promises";
-import { generateKey } from "./src/crypto";
 import chalk from "chalk";
+import { generateKey } from "./src/crypto";
 
 const apiConfigPath = "./data/api.json";
 
