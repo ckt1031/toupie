@@ -4,6 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "wrangler dev",
+		"helper": "bun run helper.ts",
 		"lint": "tsc --noEmit && biome lint",
 		"lint:fix": "tsc --noEmit && biome check --write .",
 		"deploy": "vercel deploy . --prod --no-wait"

@@ -17,16 +17,16 @@ bun run dev
 bun run deploy # Deploy to Vercel
 ```
 
-## CLI Tool (`cli.ts`)
+## CLI Tool (`helper.ts`)
 
-This CLI tool helps manage the `api.json` configuration file, allowing you to add user API keys, add providers, add keys to existing providers, add models to existing providers, and modify provider settings.
+This helper tool helps manage the `api.json` configuration file, allowing you to add user API keys, add providers, add keys to existing providers, add models to existing providers, and modify provider settings.
 
 ### Usage
 
-To run the CLI tool, use the following command:
+To run the helper tool, use the following command:
 
 ```bash
-bun run cli
+bun run helper
 ```
 
 This will start an interactive menu in your terminal, guiding you through the available options:
