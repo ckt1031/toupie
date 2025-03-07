@@ -1,5 +1,5 @@
 {
-	"name": "llm-relay-api",
+	"name": "llm-relay",
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
