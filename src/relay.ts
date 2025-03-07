@@ -81,10 +81,10 @@ export async function relayLLMRequest(request: Request) {
 	}
 
 	// Print details to console
+	console.debug(`Request URL: ${url}`);
 	console.info(
 		`Model: ${channel.provider.model}, Provider: ${channel.provider.name} (Key #${channel.apiKey.index})`,
 	);
-	console.debug(`Request URL: ${url}`);
 
 	// Replace request.body model with the model id as we need to cast models
 	const newBody = await modifyBodyWithStringValue(
