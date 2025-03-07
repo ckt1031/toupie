@@ -22,6 +22,20 @@ async function modifyBodyWithStringValue(
 	return JSON.stringify(body);
 }
 
+function calculateBodyLength(body: BodyType): string {
+	if (body instanceof FormData) {
+		let length = 0;
+		for (const value of body.values()) {
+			if (typeof value === "string") {
+				length += value.length;
+			}
+		}
+		return length.toString();
+	}
+
+	return JSON.stringify(body).length.toString();
+}
+
 export async function relayLLMRequest(request: Request) {
 	const contentType = request.headers.get("content-type");
 	const isBodyForm = contentType?.includes("multipart/form-data") ?? false;
@@ -49,7 +63,6 @@ export async function relayLLMRequest(request: Request) {
 	let url: string;
 
 	const headers = new Headers(request.headers);
-	// remove host header to prevent DNS issue
 	headers.delete("host");
 
 	// Handle Azure provider
@@ -71,6 +84,7 @@ export async function relayLLMRequest(request: Request) {
 	console.info(
 		`Model: ${channel.provider.model}, Provider: ${channel.provider.name} (Key #${channel.apiKey.index})`,
 	);
+	console.debug(`Request URL: ${url}`);
 
 	// Replace request.body model with the model id as we need to cast models
 	const newBody = await modifyBodyWithStringValue(
@@ -78,6 +92,9 @@ export async function relayLLMRequest(request: Request) {
 		"model",
 		channel.provider.model,
 	);
+
+	const bodyLength = calculateBodyLength(body);
+	headers.set("Content-Length", bodyLength);
 
 	// Request to the provider
 	const modifiedRequest = new Request(url, {
@@ -88,15 +105,10 @@ export async function relayLLMRequest(request: Request) {
 	});
 
 	const response = await fetch(modifiedRequest);
-	const modifiedResponse = new Response(response.body, {
+
+	return new Response(response.body, {
 		status: response.status,
 		statusText: response.statusText,
 		headers: response.headers,
 	});
-
-	// Add extra meta information to trace the requests
-	modifiedResponse.headers.set("X-Provider", channel.provider.name);
-	modifiedResponse.headers.set("X-Key-Index", channel.apiKey.index.toString());
-
-	return setResponseCORSHeaders(modifiedResponse);
 }

@@ -55,12 +55,9 @@ export const handleProxy = async (
 		return Response.json(errorBody, { status: 404 });
 	}
 
-	const modifiedResponse = new Response(response.body, {
+	return new Response(response.body, {
 		status: response.status,
 		statusText: response.statusText,
 		headers: response.headers,
 	});
-
-	// Add CORS headers to the response
-	return setResponseCORSHeaders(modifiedResponse);
 };
