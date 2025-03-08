@@ -15,6 +15,14 @@ export const proxyList = [
 		path: "/proxy/groq",
 		host: "api.groq.com",
 	},
+	{
+		path: "/proxy/cohere",
+		host: "api.cohere.com",
+	},
+	{
+		path: "/proxy/mistral",
+		host: "api.mistral.ai",
+	},
 ];
 
 export const handleProxy = async (
