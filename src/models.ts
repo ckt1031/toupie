@@ -35,7 +35,7 @@ export function handleModelListRequest() {
 		data: list,
 	};
 
-	return Response.json(data, { headers: corsHeaders });
+	return new Response(JSON.stringify(data), { headers: corsHeaders });
 }
 
 /**

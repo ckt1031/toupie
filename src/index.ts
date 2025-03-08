@@ -1,5 +1,5 @@
 import { handleAuth } from "./auth";
-import { handleOPTIONS, setResponseCORSHeaders } from "./headers";
+import { handleOPTIONS } from "./headers";
 import { handleModelListRequest } from "./models";
 import { handleProxy, proxyList } from "./proxy";
 import { relayLLMRequest } from "./relay";
@@ -20,7 +20,7 @@ export default {
 				message: "Welcome to the LLM API",
 			};
 
-			return Response.json(body);
+			return new Response(JSON.stringify(body));
 		}
 
 		// Proxy requests
@@ -44,7 +44,7 @@ export default {
 					},
 				};
 
-				return Response.json(errorBody, { status: 401 });
+				return new Response(JSON.stringify(errorBody), { status: 401 });
 			}
 
 			if (path === "/v1/models" && request.method === "GET") {
@@ -80,6 +80,6 @@ export default {
 		console.error("No matching route found");
 
 		// Return 404 for all other requests
-		return Response.json(errorBody, { status: 404 });
+		return new Response(JSON.stringify(errorBody), { status: 404 });
 	},
 };

@@ -1,5 +1,3 @@
-import { setResponseCORSHeaders } from "./headers";
-
 export const proxyList = [
 	{
 		path: "/proxy/google-genai",
@@ -52,7 +50,7 @@ export const handleProxy = async (
 			},
 		};
 
-		return Response.json(errorBody, { status: 404 });
+		return new Response(JSON.stringify(errorBody), { status: 404 });
 	}
 
 	return new Response(response.body, {

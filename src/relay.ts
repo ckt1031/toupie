@@ -1,4 +1,3 @@
-import { setResponseCORSHeaders } from "./headers";
 import { pickModelChannel } from "./models";
 
 type BodyType = FormData | Record<string, string>;

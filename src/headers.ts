@@ -9,11 +9,3 @@ export function handleOPTIONS() {
 		headers: corsHeaders,
 	});
 }
-
-export function setResponseCORSHeaders(response: Response) {
-	for (const [key, value] of Object.entries(corsHeaders)) {
-		response.headers.set(key, value);
-	}
-
-	return response;
-}
