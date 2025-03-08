@@ -103,11 +103,41 @@ export async function relayLLMRequest(request: Request) {
 		redirect: "follow",
 	});
 
-	const response = await fetch(modifiedRequest);
+	try {
+		const response = await fetch(modifiedRequest);
 
-	return new Response(response.body, {
-		status: response.status,
-		statusText: response.statusText,
-		headers: response.headers,
-	});
+		if (response.status === 404) {
+			console.error("Proxy request failed with 404");
+
+			const errorBody = {
+				error: {
+					message: "Not Found",
+					type: "invalid_request_error",
+					param: null,
+					code: null,
+				},
+			};
+
+			return new Response(JSON.stringify(errorBody), { status: 404 });
+		}
+
+		return new Response(response.body, {
+			status: response.status,
+			statusText: response.statusText,
+			headers: response.headers,
+		});
+	} catch (error) {
+		console.error("Proxy request failed with error", error);
+
+		const errorBody = {
+			error: {
+				message: "Internal Server Error",
+				type: "invalid_request_error",
+				param: null,
+				code: null,
+			},
+		};
+
+		return new Response(JSON.stringify(errorBody), { status: 500 });
+	}
 }
