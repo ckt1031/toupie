@@ -12,11 +12,13 @@
 			"azureAPIVersion": "2024-10-21",
 			"baseURL": "https://azure-openai.azure-api.net/v1",
 			"models": ["gpt-4o", "gpt-4o-mini"],
+			"testModel": "gpt-4o-mini",
 			"keys": ["123456"]
 		},
 		"openrouter": {
 			"name": "OpenRouter",
 			"baseURL": "https://openrouter.ai/api/v1",
+			"testModel": "openai/gpt-4o-mini",
 			"models": [
 				{
 					"request": "gpt-4o-mini",

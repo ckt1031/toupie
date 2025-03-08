@@ -4,6 +4,7 @@ import chalk from "chalk";
 import slugify from "slugify";
 import { z } from "zod";
 import { generateKey } from "./src/crypto";
+import testAPI from "./src/tasks/test-api";
 
 const apiConfigPath = "./data/api.json";
 
@@ -412,6 +413,10 @@ async function displayMenu(config: APIConfig): Promise<void> {
 		{
 			name: "Validate API Config",
 			action: validateApiConfig,
+		},
+		{
+			name: "Test API Models",
+			action: testAPI,
 		},
 		{
 			name: "Exit",
