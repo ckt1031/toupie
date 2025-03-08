@@ -1,4 +1,5 @@
 import { pickModelChannel } from "./models";
+import { pickHeaders } from "./utilts";
 
 type BodyType = FormData | Record<string, string>;
 
@@ -19,20 +20,6 @@ async function modifyBodyWithStringValue(
 
 	body[name] = value;
 	return JSON.stringify(body);
-}
-
-function calculateBodyLength(body: BodyType): string {
-	if (body instanceof FormData) {
-		let length = 0;
-		for (const value of body.values()) {
-			if (typeof value === "string") {
-				length += value.length;
-			}
-		}
-		return length.toString();
-	}
-
-	return JSON.stringify(body).length.toString();
 }
 
 export async function relayLLMRequest(request: Request) {
@@ -61,8 +48,10 @@ export async function relayLLMRequest(request: Request) {
 	// Replace the baseURL with the provider's baseURL
 	let url: string;
 
-	const headers = new Headers(request.headers);
-	headers.delete("host");
+	const headers = pickHeaders(request.headers, [
+		"content-type",
+		"Authorization",
+	]);
 
 	// Handle Azure provider
 	if (channel.provider.isAzure) {
@@ -92,19 +81,14 @@ export async function relayLLMRequest(request: Request) {
 		channel.provider.model,
 	);
 
-	const bodyLength = calculateBodyLength(body);
-	headers.set("Content-Length", bodyLength);
-
-	// Request to the provider
-	const modifiedRequest = new Request(url, {
-		headers,
-		method: request.method,
-		body: newBody,
-		redirect: "follow",
-	});
-
 	try {
-		const response = await fetch(modifiedRequest);
+		const response = await fetch(url, {
+			headers,
+			method: request.method,
+			body: newBody,
+			// @ts-ignore
+			duplex: "half",
+		});
 
 		if (response.status === 404) {
 			console.error("Proxy request failed with 404");

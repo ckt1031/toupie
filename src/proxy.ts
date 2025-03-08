@@ -1,3 +1,5 @@
+import { pickHeaders } from "./utilts";
+
 export const proxyList = [
 	{
 		path: "/proxy/google-genai",
@@ -33,19 +35,19 @@ export const handleProxy = async (
 	const re = new RegExp(`^https?://.*${path}`);
 	const url = request.url.replace(re, `https://${host}`);
 
-	const headers = new Headers(request.headers);
-	// Remove the host header to prevent DNS issue
-	headers.delete("host");
-
-	const modifiedRequest = new Request(url, {
-		headers,
-		method: request.method,
-		body: request.body,
-		redirect: "follow",
-	});
+	const headers = pickHeaders(request.headers, [
+		"content-type",
+		"Authorization",
+	]);
 
 	try {
-		const response = await fetch(modifiedRequest);
+		const response = await fetch(url, {
+			headers,
+			method: request.method,
+			body: request.body,
+			// @ts-ignore
+			duplex: "half",
+		});
 
 		if (response.status === 404) {
 			console.error("Proxy request failed with 404");
