@@ -1,5 +1,5 @@
 import { pickModelChannel } from "./models";
-import { pickHeaders } from "./utilts";
+import { pickHeaders, rejectErrorResponse } from "./utils";
 
 type BodyType = FormData | Record<string, string>;
 
@@ -90,19 +90,8 @@ export async function relayLLMRequest(request: Request) {
 			duplex: "half",
 		});
 
-		if (response.status === 404) {
-			console.error("Proxy request failed with 404");
-
-			const errorBody = {
-				error: {
-					message: "Not Found",
-					type: "invalid_request_error",
-					param: null,
-					code: null,
-				},
-			};
-
-			return new Response(JSON.stringify(errorBody), { status: 404 });
+		if (response.status !== 200) {
+			throw new Error(`Proxy request failed with status ${response.status}`);
 		}
 
 		return new Response(response.body, {
@@ -111,7 +100,18 @@ export async function relayLLMRequest(request: Request) {
 			headers: response.headers,
 		});
 	} catch (error) {
-		console.error("Proxy request failed with error", error);
+		const isErrorValid = error instanceof Error;
+
+		if (!isErrorValid) {
+			// An unknown error occurred
+			return rejectErrorResponse(
+				500,
+				"Unknown Internal Server Error",
+				"internal_server_error",
+			);
+		}
+
+		console.error("Relay request failed with error", error);
 
 		const errorBody = {
 			error: {

@@ -1,4 +1,4 @@
-import { pickHeaders } from "./utilts";
+import { rejectErrorResponse } from "./utils";
 
 export const proxyList = [
 	{
@@ -35,10 +35,8 @@ export const handleProxy = async (
 	const re = new RegExp(`^https?://.*${path}`);
 	const url = request.url.replace(re, `https://${host}`);
 
-	const headers = pickHeaders(request.headers, [
-		"content-type",
-		"Authorization",
-	]);
+	const headers = new Headers(request.headers);
+	headers.delete("host"); // Remove the host header to avoid DNS resolution errors
 
 	try {
 		const response = await fetch(url, {
@@ -49,19 +47,8 @@ export const handleProxy = async (
 			duplex: "half",
 		});
 
-		if (response.status === 404) {
-			console.error("Proxy request failed with 404");
-
-			const errorBody = {
-				error: {
-					message: "Not Found",
-					type: "invalid_request_error",
-					param: null,
-					code: null,
-				},
-			};
-
-			return new Response(JSON.stringify(errorBody), { status: 404 });
+		if (response.status !== 200) {
+			throw new Error(`Proxy request failed with status ${response.status}`);
 		}
 
 		return new Response(response.body, {
@@ -70,6 +57,17 @@ export const handleProxy = async (
 			headers: response.headers,
 		});
 	} catch (error) {
+		const isErrorValid = error instanceof Error;
+
+		if (!isErrorValid) {
+			// An unknown error occurred
+			return rejectErrorResponse(
+				500,
+				"Unknown Internal Server Error",
+				"internal_server_error",
+			);
+		}
+
 		console.error("Proxy request failed with error", error);
 
 		const errorBody = {
