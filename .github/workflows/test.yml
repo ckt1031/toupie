@@ -21,5 +21,8 @@ jobs:
       - name: Install Dependencies
         run: bun install
 
+      - name: Copy Configurations
+        run: cp ./data/api-example.json ./data/api.json
+
       - name: Check Project
         run: bun run lint
