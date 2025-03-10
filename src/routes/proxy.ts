@@ -1,4 +1,4 @@
-import { rejectErrorResponse } from "./utils";
+import { type IRequest, error } from "itty-router";
 
 export const proxyList = [
 	{
@@ -28,7 +28,7 @@ export const proxyList = [
 ];
 
 export const handleProxy = async (
-	request: Request,
+	request: IRequest,
 	path: string,
 	host: string,
 ) => {
@@ -36,6 +36,7 @@ export const handleProxy = async (
 	const url = request.url.replace(re, `https://${host}`);
 
 	const headers = new Headers(request.headers);
+	headers.delete("cf-connecting-ip"); // Remove the Cloudflare connecting IP header
 	headers.delete("host"); // Remove the host header to avoid DNS resolution errors
 
 	try {
@@ -48,7 +49,9 @@ export const handleProxy = async (
 		});
 
 		if (response.status !== 200) {
-			throw new Error(`Proxy request failed with status ${response.status}`);
+			throw new Error(`Proxy request failed with status ${response.status}`, {
+				cause: response,
+			});
 		}
 
 		return new Response(response.body, {
@@ -56,29 +59,20 @@ export const handleProxy = async (
 			statusText: response.statusText,
 			headers: response.headers,
 		});
-	} catch (error) {
-		const isErrorValid = error instanceof Error;
+	} catch (err) {
+		const isErrorValid = err instanceof Error;
 
-		if (!isErrorValid) {
-			// An unknown error occurred
-			return rejectErrorResponse(
-				500,
-				"Unknown Internal Server Error",
-				"internal_server_error",
-			);
+		if (isErrorValid) {
+			// If cause is a Response, log the response body
+			if (err.cause instanceof Response) {
+				console.error("Response:", await err.cause.text());
+			} else {
+				console.error(err);
+			}
+
+			return error(500, err.message);
 		}
 
-		console.error("Proxy request failed with error", error);
-
-		const errorBody = {
-			error: {
-				message: "Internal Server Error",
-				type: "invalid_request_error",
-				param: null,
-				code: null,
-			},
-		};
-
-		return new Response(JSON.stringify(errorBody), { status: 500 });
+		return error(500, "Internal Server Error");
 	}
 };

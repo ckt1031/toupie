@@ -1,5 +1,6 @@
-import { pickModelChannel } from "./models";
-import { pickHeaders, rejectErrorResponse } from "./utils";
+import { error } from "itty-router";
+import { pickModelChannel } from "../pick-model";
+import { pickHeaders } from "../utils";
 
 type BodyType = FormData | Record<string, string>;
 
@@ -34,7 +35,7 @@ export async function relayLLMRequest(request: Request) {
 	if (!model) {
 		const erorrMessage = "Model is required";
 		console.error(erorrMessage);
-		return new Response(erorrMessage, { status: 400 });
+		return error(400, erorrMessage);
 	}
 
 	const channel = pickModelChannel(model);
@@ -42,7 +43,7 @@ export async function relayLLMRequest(request: Request) {
 	if (!channel) {
 		const erorrMessage = `Model ${model} not found`;
 		console.error(erorrMessage);
-		return new Response(erorrMessage, { status: 404 });
+		return error(404, erorrMessage);
 	}
 
 	// Replace the baseURL with the provider's baseURL
@@ -91,7 +92,9 @@ export async function relayLLMRequest(request: Request) {
 		});
 
 		if (response.status !== 200) {
-			throw new Error(`Proxy request failed with status ${response.status}`);
+			throw new Error(`Proxy request failed with status ${response.status}`, {
+				cause: response,
+			});
 		}
 
 		return new Response(response.body, {
@@ -99,29 +102,20 @@ export async function relayLLMRequest(request: Request) {
 			statusText: response.statusText,
 			headers: response.headers,
 		});
-	} catch (error) {
-		const isErrorValid = error instanceof Error;
+	} catch (err) {
+		const isErrorValid = err instanceof Error;
 
-		if (!isErrorValid) {
-			// An unknown error occurred
-			return rejectErrorResponse(
-				500,
-				"Unknown Internal Server Error",
-				"internal_server_error",
-			);
+		if (isErrorValid) {
+			// If cause is a Response, log the response body
+			if (err.cause instanceof Response) {
+				console.error("Response:", await err.cause.text());
+			} else {
+				console.error(err);
+			}
+
+			return error(500, err.message);
 		}
 
-		console.error("Relay request failed with error", error);
-
-		const errorBody = {
-			error: {
-				message: "Internal Server Error",
-				type: "invalid_request_error",
-				param: null,
-				code: null,
-			},
-		};
-
-		return new Response(JSON.stringify(errorBody), { status: 500 });
+		return error(500, "Internal Server Error");
 	}
 }

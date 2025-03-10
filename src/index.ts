@@ -1,85 +1,26 @@
+import { AutoRouter, cors, json } from "itty-router";
 import { handleAuth } from "./auth";
-import { handleOPTIONS } from "./headers";
-import { handleModelListRequest } from "./models";
-import { handleProxy, proxyList } from "./proxy";
-import { relayLLMRequest } from "./relay";
+import { relayLLMRequest } from "./routes/completions";
+import { handleModelListRequest } from "./routes/models";
+import { handleProxy, proxyList } from "./routes/proxy";
 
-export default {
-	async fetch(request: Request) {
-		// Handle OPTIONS requests to allow CORS
-		if (request.method === "OPTIONS") {
-			return handleOPTIONS();
-		}
+const { preflight, corsify } = cors();
 
-		// Get URL path
-		const path = new URL(request.url).pathname;
+const router = AutoRouter({
+	before: [preflight],
+	finally: [corsify],
+});
 
-		// Handle / endpoint
-		if (path === "/") {
-			const body = {
-				message: "Welcome to the LLM API",
-			};
+for (const proxy of proxyList) {
+	router.all(`${proxy.path}/*`, (request) => {
+		return handleProxy(request, proxy.path, proxy.host);
+	});
+}
 
-			return new Response(JSON.stringify(body));
-		}
+router.get("/v1/models", handleAuth, handleModelListRequest);
+router.post("/v1/chat/completions", handleAuth, relayLLMRequest);
+router.post("/v1/embeddings", handleAuth, relayLLMRequest);
+router.post("/v1/audio/transcriptions", handleAuth, relayLLMRequest);
+router.post("/v1/audio/translations", handleAuth, relayLLMRequest);
 
-		// Proxy requests
-		for (const proxy of proxyList) {
-			if (path.startsWith(proxy.path)) {
-				return handleProxy(request, proxy.path, proxy.host);
-			}
-		}
-
-		// API key protected routes
-		if (path.startsWith("/v1")) {
-			const isAuthenticated = handleAuth(request);
-
-			if (!isAuthenticated) {
-				const errorBody = {
-					error: {
-						message: "Invalid API key",
-						type: "invalid_api_key",
-						param: null,
-						code: null,
-					},
-				};
-
-				return new Response(JSON.stringify(errorBody), { status: 401 });
-			}
-
-			if (path === "/v1/models" && request.method === "GET") {
-				return handleModelListRequest();
-			}
-
-			if (path === "/v1/chat/completions" && request.method === "POST") {
-				return relayLLMRequest(request);
-			}
-
-			if (path === "/v1/embeddings" && request.method === "POST") {
-				return relayLLMRequest(request);
-			}
-
-			if (path === "/v1/audio/transcriptions" && request.method === "POST") {
-				return relayLLMRequest(request);
-			}
-
-			if (path === "/v1/audio/translations" && request.method === "POST") {
-				return relayLLMRequest(request);
-			}
-		}
-
-		const errorBody = {
-			error: {
-				message: "Not Found",
-				type: "invalid_request_error",
-				param: null,
-				code: null,
-			},
-		};
-
-		console.error("No matching route found");
-
-		// Return 404 for all other requests
-		return new Response(JSON.stringify(errorBody), { status: 404 });
-	},
-};
+export default router;

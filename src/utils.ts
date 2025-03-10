@@ -15,20 +15,3 @@ export const pickHeaders = (
 
 	return picked;
 };
-
-export const rejectErrorResponse = (
-	status: number,
-	message: string,
-	type: string,
-): Response => {
-	const errorBody: ErrorBody = {
-		error: {
-			message,
-			type,
-			param: null,
-			code: null,
-		},
-	};
-
-	return new Response(JSON.stringify(errorBody), { status });
-};
