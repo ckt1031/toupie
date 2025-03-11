@@ -30,11 +30,16 @@ export const proxyList = [
 
 export const handleProxy = async (
 	request: IRequest,
-	path: string,
-	host: string,
+	proxyPath: string,
+	proxyHost: string,
 ) => {
-	const re = new RegExp(`^https?://.*${path}`);
-	const url = request.url.replace(re, `https://${host}`);
+	// Original: https://api.example.com/proxy/openai/v1/chat/completions
+	// Proxied: https://api.openai.com/v1/chat/completions
+	const originalServerOrigin = new URL(request.url).origin;
+	const url = request.url.replace(
+		`${originalServerOrigin}${proxyPath}`,
+		`https://${proxyHost}`,
+	);
 
 	const headers = new Headers(request.headers);
 	headers.delete("cf-connecting-ip"); // Remove the Cloudflare connecting IP header

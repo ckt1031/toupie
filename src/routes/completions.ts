@@ -40,16 +40,21 @@ export async function relayLLMRequest(request: Request) {
 	]);
 
 	// Handle Azure provider
+	const originalServerOrigin = new URL(request.url).origin;
+
 	if (channel.provider.isAzure) {
 		url = request.url.replace(
-			/^https?:.*\/v1/,
+			`${originalServerOrigin}/v1`,
 			`${channel.provider.baseURL}/openai/deployments/${channel.provider.model}`,
 		);
 		url += `?api-version=${channel.provider.azureAPIVersion}`;
 
 		headers.set("api-key", channel.apiKey.value);
 	} else {
-		url = request.url.replace(/^https?:.*\/v1/, channel.provider.baseURL);
+		url = request.url.replace(
+			`${originalServerOrigin}/v1`,
+			channel.provider.baseURL,
+		);
 
 		headers.set("Authorization", `Bearer ${channel.apiKey.value}`);
 	}
