@@ -10,13 +10,16 @@ interface Model {
 
 export function handleModelListRequest() {
 	const list: Model[] = [];
+	const modelIds = new Set<string>();
 
 	for (const provider of Object.values(apiConfig.providers)) {
 		for (const model of provider.models) {
 			const modelId = typeof model === "string" ? model : model.request;
 
-			// Check if there is the same model in the list
-			if (list.find((m) => m.id === modelId)) continue;
+			if (modelIds.has(modelId)) continue;
+
+			// Add the model to model cache to avoid duplicates
+			modelIds.add(modelId);
 
 			list.push({
 				id: modelId,
