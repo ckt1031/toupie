@@ -40,21 +40,31 @@ export async function proxiedFetch(
 			headers: response.headers,
 		});
 	} catch (err) {
+		console.error(err);
+
 		const isErrorValid = err instanceof Error;
 
 		if (isErrorValid) {
 			// If cause is a Response, log the response body
 			if (err.cause instanceof Response) {
-				console.error("Response:", await err.cause.text());
-			} else {
-				console.error(err);
+				// Return JSON data if available
+				// Check if response is JSON
+				if (
+					err.cause.headers.get("content-type")?.includes("application/json")
+				) {
+					const json = await err.cause.json();
+					return error(err.cause.status, { cause: json });
+				}
+
+				const text = await err.cause.text();
+				console.error("Response:", text);
+
+				return error(err.cause.status, { cause: text });
 			}
 
-			// Itty router error
 			return error(500, err.message);
 		}
 
-		// Itty router error
 		return error(500, "Internal Server Error");
 	}
 }
