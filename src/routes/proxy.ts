@@ -1,4 +1,5 @@
-import { type IRequest, error } from "itty-router";
+import type { IRequest } from "itty-router";
+import { handleFetch } from "../utils/api-utils";
 
 export const proxyList = [
 	{
@@ -39,40 +40,15 @@ export const handleProxy = async (
 	headers.delete("cf-connecting-ip"); // Remove the Cloudflare connecting IP header
 	headers.delete("host"); // Remove the host header to avoid DNS resolution errors
 
-	try {
-		const response = await fetch(url, {
+	const response = await handleFetch(
+		fetch(url, {
 			headers,
 			method: request.method,
 			body: request.body,
 			// @ts-ignore
 			duplex: "half",
-		});
+		}),
+	);
 
-		if (response.status !== 200) {
-			throw new Error(`Proxy request failed with status ${response.status}`, {
-				cause: response,
-			});
-		}
-
-		return new Response(response.body, {
-			status: response.status,
-			statusText: response.statusText,
-			headers: response.headers,
-		});
-	} catch (err) {
-		const isErrorValid = err instanceof Error;
-
-		if (isErrorValid) {
-			// If cause is a Response, log the response body
-			if (err.cause instanceof Response) {
-				console.error("Response:", await err.cause.text());
-			} else {
-				console.error(err);
-			}
-
-			return error(500, err.message);
-		}
-
-		return error(500, "Internal Server Error");
-	}
+	return response;
 };
