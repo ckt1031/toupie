@@ -1,28 +1,12 @@
 import { error } from "itty-router";
-import { proxiedFetch } from "../utils/api-utils";
+import {
+	type BodyType,
+	getValueFromBody,
+	modifyBodyWithStringValue,
+	proxiedFetch,
+} from "../utils/api-utils";
 import pickHeaders from "../utils/pick-headers";
 import { pickModelChannel } from "../utils/pick-model";
-
-type BodyType = FormData | Record<string, string>;
-
-async function getValueFromBody(body: BodyType, key: string) {
-	if (body instanceof FormData) return body.get(key) as string;
-	return body[key];
-}
-
-async function modifyBodyWithStringValue(
-	body: BodyType,
-	name: string,
-	value: string,
-): Promise<BodyInit> {
-	if (body instanceof FormData) {
-		body.set(name, value);
-		return body;
-	}
-
-	body[name] = value;
-	return JSON.stringify(body);
-}
 
 export async function relayLLMRequest(request: Request) {
 	const contentType = request.headers.get("content-type");
@@ -37,6 +21,10 @@ export async function relayLLMRequest(request: Request) {
 		const erorrMessage = "Model is required";
 		console.error(erorrMessage);
 		return error(400, erorrMessage);
+	}
+
+	if (typeof body === "object") {
+		console.debug("Request body: ", body);
 	}
 
 	const channel = pickModelChannel(model);

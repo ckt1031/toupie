@@ -40,6 +40,15 @@ export const handleProxy = async (
 	headers.delete("cf-connecting-ip"); // Remove the Cloudflare connecting IP header
 	headers.delete("host"); // Remove the host header to avoid DNS resolution errors
 
+	// Log the request body (if it is JSON, or text)
+	const contentType = request.headers.get("content-type") ?? "";
+
+	if (contentType.includes("application/json")) {
+		console.info("Request body: ", await request.json());
+	} else if (contentType.includes("plain")) {
+		console.info("Request body: ", await request.text());
+	}
+
 	const response = await proxiedFetch(url, {
 		headers,
 		method: request.method,

@@ -1,5 +1,26 @@
 import { error } from "itty-router";
 
+export type BodyType = FormData | Record<string, string>;
+
+export async function getValueFromBody(body: BodyType, key: string) {
+	if (body instanceof FormData) return body.get(key) as string;
+	return body[key];
+}
+
+export async function modifyBodyWithStringValue(
+	body: BodyType,
+	name: string,
+	value: string,
+): Promise<BodyInit> {
+	if (body instanceof FormData) {
+		body.set(name, value);
+		return body;
+	}
+
+	body[name] = value;
+	return JSON.stringify(body);
+}
+
 export async function proxiedFetch(
 	input: RequestInfo,
 	init: RequestInit,
