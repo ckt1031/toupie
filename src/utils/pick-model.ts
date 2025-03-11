@@ -1,16 +1,52 @@
 import apiConfig from "../../data/api.json";
 
+// Define the Provider type based on the structure in apiConfig
+interface Provider {
+	name: string;
+	baseURL: string;
+	models: (string | { request: string; destination: string })[];
+	keys: string[];
+	azure?: boolean;
+	azureAPIVersion?: string;
+}
+
+// Create a map of modelId to providers
+const modelIdToProviders: Record<string, Provider[]> = {};
+
+for (const provider of Object.values(apiConfig.providers) as Provider[]) {
+	for (const model of provider.models) {
+		// Get the modelId
+		const modelId = typeof model === "string" ? model : model.request;
+
+		// If the modelId is not in the map, add it
+		if (!modelIdToProviders[modelId]) modelIdToProviders[modelId] = [];
+
+		modelIdToProviders[modelId].push(provider);
+	}
+}
+
+// Create a map of modelId to model
+const modelIdToModel: Record<
+	string,
+	string | { request: string; destination: string }
+> = {};
+
+for (const provider of Object.values(apiConfig.providers) as Provider[]) {
+	for (const model of provider.models) {
+		// Get the modelId
+		const modelId = typeof model === "string" ? model : model.request;
+
+		modelIdToModel[modelId] = model;
+	}
+}
+
 /**
  * Randomly pick a provider for the model based on the model id
  */
 export function pickModelChannel(modelId: string) {
-	const providers = Object.values(apiConfig.providers).filter((provider) =>
-		provider.models.some((m) =>
-			typeof m === "string" ? m === modelId : m.request === modelId,
-		),
-	);
+	const providers = modelIdToProviders[modelId];
 
-	if (providers.length === 0) return null;
+	if (!providers || providers.length === 0) return null;
 
 	// Randomly pick a provider from the filtered list
 	const randomIndex = Math.floor(Math.random() * providers.length);
@@ -21,9 +57,7 @@ export function pickModelChannel(modelId: string) {
 	const key = provider.keys[randomKeyIndex];
 
 	// Handle model request
-	const model = provider.models.find((m) =>
-		typeof m === "string" ? m === modelId : m.request === modelId,
-	);
+	const model = modelIdToModel[modelId];
 
 	if (!model) return null;
 
