@@ -44,9 +44,9 @@ export const handleProxy = async (
 	const contentType = request.headers.get("content-type") ?? "";
 
 	if (contentType.includes("application/json")) {
-		console.info("Request body: ", await request.json());
+		console.info("Request body: ", await request.clone().json());
 	} else if (contentType.includes("plain")) {
-		console.info("Request body: ", await request.text());
+		console.info("Request body: ", await request.clone().text());
 	}
 
 	const response = await proxiedFetch(url, {
