@@ -1,6 +1,23 @@
-import { generateKey } from "../crypto";
 import type { APIConfig } from "./api-config";
 import { green, red, rl, yellow } from "./cli-utils";
+
+export function generateKey() {
+	const keyChars =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	let key = "";
+	for (let i = 0; i < 16; i++) {
+		key += keyChars[Math.floor(Math.random() * keyChars.length)];
+	}
+
+	// Cryptographically secure UUID
+	const uuid = crypto.randomUUID();
+
+	// Without -
+	const uuidWithoutDash = uuid.replace(/-/g, "");
+
+	// Combine
+	return key + uuidWithoutDash;
+}
 
 export async function chooseUserAPIKeyName(config: APIConfig): Promise<string> {
 	console.log(green("\nAvailable User API Keys:"));
