@@ -1,3 +1,5 @@
+import { error } from "itty-router";
+
 export async function handleFetch(
 	fetchCall: Promise<Response>,
 ): Promise<Response> {
@@ -26,11 +28,11 @@ export async function handleFetch(
 				console.error(err);
 			}
 
-			// @ts-expect-error - Itty router error
+			// Itty router error
 			return error(500, err.message);
 		}
 
-		// @ts-expect-error - Itty router error
+		// Itty router error
 		return error(500, "Internal Server Error");
 	}
 }
