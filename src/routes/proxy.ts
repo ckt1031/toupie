@@ -1,5 +1,5 @@
 import type { IRequest } from "itty-router";
-import { handleFetch } from "../utils/api-utils";
+import { proxiedFetch } from "../utils/api-utils";
 
 export const proxyList = [
 	{
@@ -40,15 +40,13 @@ export const handleProxy = async (
 	headers.delete("cf-connecting-ip"); // Remove the Cloudflare connecting IP header
 	headers.delete("host"); // Remove the host header to avoid DNS resolution errors
 
-	const response = await handleFetch(
-		fetch(url, {
-			headers,
-			method: request.method,
-			body: request.body,
-			// @ts-ignore
-			duplex: "half",
-		}),
-	);
+	const response = await proxiedFetch(url, {
+		headers,
+		method: request.method,
+		body: request.body,
+		// @ts-ignore
+		duplex: "half",
+	});
 
 	return response;
 };

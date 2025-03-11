@@ -1,5 +1,5 @@
 import { error } from "itty-router";
-import { handleFetch } from "../utils/api-utils";
+import { proxiedFetch } from "../utils/api-utils";
 import pickHeaders from "../utils/pick-headers";
 import { pickModelChannel } from "../utils/pick-model";
 
@@ -83,15 +83,13 @@ export async function relayLLMRequest(request: Request) {
 		channel.provider.model,
 	);
 
-	const response = await handleFetch(
-		fetch(url, {
-			headers,
-			method: request.method,
-			body: newBody,
-			// @ts-ignore
-			duplex: "half",
-		}),
-	);
+	const response = await proxiedFetch(url, {
+		headers,
+		method: request.method,
+		body: newBody,
+		// @ts-ignore
+		duplex: "half",
+	});
 
 	return response;
 }

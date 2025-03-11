@@ -1,10 +1,11 @@
 import { error } from "itty-router";
 
-export async function handleFetch(
-	fetchCall: Promise<Response>,
+export async function proxiedFetch(
+	input: RequestInfo,
+	init: RequestInit,
 ): Promise<Response> {
 	try {
-		const response = await fetchCall;
+		const response = await fetch(input, init);
 
 		if (response.status !== 200) {
 			throw new Error(`Proxy request failed with status ${response.status}`, {
