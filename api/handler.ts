@@ -19,8 +19,6 @@ export const config = {
 		"dub1",
 		// Frankfurt, Germany
 		"fra1",
-		// São Paulo, Brazil
-		"gru1",
 		// Tokyo, Japan
 		"hnd1",
 		// Washington, D.C., USA
