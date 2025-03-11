@@ -23,4 +23,7 @@ router.post("/v1/embeddings", handleAuth, relayLLMRequest);
 router.post("/v1/audio/transcriptions", handleAuth, relayLLMRequest);
 router.post("/v1/audio/translations", handleAuth, relayLLMRequest);
 
+// Fallback route
+router.get("/", () => json({ message: "OK" }));
+
 export default router;
