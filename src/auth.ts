@@ -1,6 +1,8 @@
 import { error } from "itty-router";
 import apiConfig from "../data/api.json";
 
+const apiKeyMap = new Map(apiConfig.userKeys.map((item) => [item.key, item]));
+
 /**
  *  Match keys in Authorization header
  */
@@ -10,11 +12,7 @@ export function handleAuth(request: Request) {
 
 	if (!authorization) return error(401, "Missing key");
 
-	const key = authorization.replace("Bearer ", "");
-
-	if (!key) return error(401, "Invalid key");
-
-	const keyData = apiConfig.userKeys.find((i) => i.key === key);
+	const keyData = apiKeyMap.get(authorization.replace("Bearer ", ""));
 
 	if (!keyData) return error(401, "Invalid key");
 

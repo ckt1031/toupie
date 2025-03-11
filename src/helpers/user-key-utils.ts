@@ -1,22 +1,13 @@
 import type { APIConfig } from "./api-config";
 import { green, red, rl, yellow } from "./cli-utils";
 
-export function generateKey() {
-	const keyChars =
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	let key = "";
-	for (let i = 0; i < 16; i++) {
-		key += keyChars[Math.floor(Math.random() * keyChars.length)];
-	}
-
-	// Cryptographically secure UUID
-	const uuid = crypto.randomUUID();
-
-	// Without -
-	const uuidWithoutDash = uuid.replace(/-/g, "");
-
-	// Combine
-	return key + uuidWithoutDash;
+// Generate a random key with crypto.getRandomValues to ensure it's cryptographically secure
+function generateKey(length = 32): string {
+	const array = new Uint8Array(length);
+	crypto.getRandomValues(array);
+	return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
+		"",
+	); // Hex encoding
 }
 
 export async function chooseUserAPIKeyName(config: APIConfig): Promise<string> {
