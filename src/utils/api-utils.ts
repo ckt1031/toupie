@@ -40,6 +40,7 @@ export async function proxiedFetch(
 			headers: response.headers,
 		});
 	} catch (err) {
+		// Log the error
 		console.error(err);
 
 		const isErrorValid = err instanceof Error;
@@ -53,18 +54,25 @@ export async function proxiedFetch(
 					err.cause.headers.get("content-type")?.includes("application/json")
 				) {
 					const json = await err.cause.json();
+
+					// Log the JSON data
+					console.error("Response:", json);
+
 					return error(err.cause.status, { cause: json });
 				}
 
 				const text = await err.cause.text();
+				// Log the text data
 				console.error("Response:", text);
 
 				return error(err.cause.status, { cause: text });
 			}
 
+			// If cause is not a Response, return the error message
 			return error(500, err.message);
 		}
 
+		// If error is not an instance of Error, return generic error
 		return error(500, "Internal Server Error");
 	}
 }
