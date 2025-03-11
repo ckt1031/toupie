@@ -1,7 +1,4 @@
-export const pickHeaders = (
-	headers: Headers,
-	keys: (string | RegExp)[],
-): Headers => {
+const pickHeaders = (headers: Headers, keys: (string | RegExp)[]): Headers => {
 	const picked = new Headers();
 
 	for (const key of headers.keys()) {
@@ -15,3 +12,5 @@ export const pickHeaders = (
 
 	return picked;
 };
+
+export default pickHeaders;

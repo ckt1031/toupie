@@ -1,7 +1,7 @@
 import { error } from "itty-router";
-import { pickModelChannel } from "../pick-model";
-import { pickHeaders } from "../utils";
 import { handleFetch } from "../utils/api-utils";
+import pickHeaders from "../utils/pick-headers";
+import { pickModelChannel } from "../utils/pick-model";
 
 type BodyType = FormData | Record<string, string>;
 

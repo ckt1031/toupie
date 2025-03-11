@@ -1,4 +1,4 @@
-import apiConfig from "../data/api.json";
+import apiConfig from "../../data/api.json";
 
 /**
  * Randomly pick a provider for the model based on the model id
