@@ -23,10 +23,6 @@ export async function relayLLMRequest(request: Request) {
 		return error(400, erorrMessage);
 	}
 
-	if (typeof body === "object") {
-		console.debug("Request body: ", body);
-	}
-
 	const channel = pickModelChannel(model);
 
 	if (!channel) {
