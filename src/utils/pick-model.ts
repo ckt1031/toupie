@@ -40,8 +40,7 @@ for (const provider of Object.values(apiConfig.providers) as Provider[]) {
 	}
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-function getRandomElement(array: any[]) {
+function getRandomElement<T>(array: T[]): T {
 	// if (!array || array.length === 0) {
 	// 	return undefined;
 	// }
