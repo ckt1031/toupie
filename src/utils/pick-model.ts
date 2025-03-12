@@ -40,6 +40,29 @@ for (const provider of Object.values(apiConfig.providers) as Provider[]) {
 	}
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+function getRandomElement(array: any[]) {
+	// if (!array || array.length === 0) {
+	// 	return undefined;
+	// }
+
+	// if (array.length > 2 ** 32 - 1) {
+	// 	throw new RangeError("Array too large");
+	// }
+
+	const maxRandomValue = 2 ** 32;
+	const randomBuffer = new Uint32Array(1);
+
+	let randomIndex: number;
+
+	do {
+		crypto.getRandomValues(randomBuffer);
+		randomIndex = Math.floor((randomBuffer[0] / maxRandomValue) * array.length);
+	} while (randomIndex >= array.length);
+
+	return array[randomIndex];
+}
+
 /**
  * Randomly pick a provider for the model based on the model id
  */
@@ -49,12 +72,10 @@ export function pickModelChannel(modelId: string) {
 	if (!providers || providers.length === 0) return null;
 
 	// Randomly pick a provider from the filtered list
-	const randomIndex = Math.floor(Math.random() * providers.length);
-	const provider = providers[randomIndex];
+	const provider = getRandomElement(providers);
 
 	// Random pick a key from the provider
-	const randomKeyIndex = Math.floor(Math.random() * provider.keys.length);
-	const key = provider.keys[randomKeyIndex];
+	const key = getRandomElement(provider.keys);
 
 	// Handle model request
 	const model = modelIdToModel[modelId];
@@ -63,7 +84,7 @@ export function pickModelChannel(modelId: string) {
 
 	return {
 		apiKey: {
-			index: randomKeyIndex,
+			index: provider.keys.indexOf(key),
 			value: key,
 		},
 		provider: {
