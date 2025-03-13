@@ -1,7 +1,8 @@
 import * as readline from "node:readline/promises";
 import chalk from "chalk";
+import { type APIConfig, apiConfigSchema } from "../schema";
 import testAPI from "../tasks/test-api";
-import { type APIConfig, apiConfigSchema, saveApiConfig } from "./api-config";
+import { saveApiConfig } from "./api-config";
 import {
 	addKeyToExistingProvider,
 	addModelToExistingProvider,

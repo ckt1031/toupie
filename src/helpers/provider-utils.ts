@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import chalk from "chalk";
 import slugify from "slugify";
-import type { APIConfig } from "./api-config";
+import type { APIConfig } from "../schema";
 import { apiConfigPath } from "./api-config";
 import { cyan, green, red, rl, yellow } from "./cli-utils";
 

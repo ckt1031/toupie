@@ -1,4 +1,4 @@
-import type { APIConfig } from "./api-config";
+import type { APIConfig } from "../schema";
 import { green, red, rl, yellow } from "./cli-utils";
 
 // Generate a random key with crypto.getRandomValues to ensure it's cryptographically secure

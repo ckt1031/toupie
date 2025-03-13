@@ -1,14 +1,7 @@
 import apiConfig from "../../data/api.json";
+import type { APIConfig } from "../schema";
 
-// Define the Provider type based on the structure in apiConfig
-interface Provider {
-	name: string;
-	baseURL: string;
-	models: (string | { request: string; destination: string })[];
-	keys: string[];
-	azure?: boolean;
-	azureAPIVersion?: string;
-}
+type Provider = APIConfig["providers"][string];
 
 // Create a map of modelId to providers
 const modelIdToProviders: Record<string, Provider[]> = {};
