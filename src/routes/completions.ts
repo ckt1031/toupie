@@ -35,9 +35,14 @@ export async function relayLLMRequest(request: Request) {
 	let url: string;
 
 	const headers = pickHeaders(request.headers, [
-		// "content-type",
+		"content-type",
 		"Authorization",
 	]);
+
+	// We will remove from body content-type if it's a form data
+	if (isBodyForm) {
+		headers.delete("content-type");
+	}
 
 	// Handle Azure provider
 	const originalServerOrigin = new URL(request.url).origin;
