@@ -35,7 +35,7 @@ export async function relayLLMRequest(request: Request) {
 	let url: string;
 
 	const headers = pickHeaders(request.headers, [
-		"content-type",
+		// "content-type",
 		"Authorization",
 	]);
 
