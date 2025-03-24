@@ -11,6 +11,10 @@ const router = AutoRouter({
 	finally: [corsify],
 });
 
+// Health check
+router.get("/health", () => json({ message: "OK" }));
+
+// Proxy routes
 for (const proxy of proxyList) {
 	router.all(`${proxy.path}/*`, (request) => {
 		return handleProxy(request, proxy.path, proxy.host);

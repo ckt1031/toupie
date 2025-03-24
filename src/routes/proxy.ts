@@ -26,6 +26,10 @@ export const proxyList = [
 		path: "/proxy/mistral",
 		host: "api.mistral.ai",
 	},
+	{
+		path: "/proxy/openrouter",
+		host: "openrouter.ai",
+	},
 ];
 
 export const handleProxy = async (
