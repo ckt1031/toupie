@@ -12,15 +12,19 @@ export async function relayLLMRequest(request: Request) {
 	const contentType = request.headers.get("content-type");
 	const isBodyForm = contentType?.includes("multipart/form-data") ?? false;
 
+	// Only /v1/audio/* can be form data
+	if (isBodyForm && !request.url.startsWith("/v1/audio/")) {
+		return error(400, "Form data is not allowed for this endpoint");
+	}
+
 	const body: BodyType = isBodyForm
 		? await request.formData()
 		: await request.json();
 	const model: string | undefined = await getValueFromBody(body, "model");
 
+	// Model is required
 	if (!model) {
-		const erorrMessage = "Model is required";
-		console.error(erorrMessage);
-		return error(400, erorrMessage);
+		return error(400, "Model is required");
 	}
 
 	const channel = pickModelChannel(model);
