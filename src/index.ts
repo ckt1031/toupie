@@ -18,10 +18,19 @@ for (const proxy of proxyList) {
 }
 
 router.get("/v1/models", handleAuth, handleModelListRequest);
-router.post("/v1/chat/completions", handleAuth, relayLLMRequest);
+
+// Embeddings for text classification, similarity, etc.
 router.post("/v1/embeddings", handleAuth, relayLLMRequest);
-router.post("/v1/audio/transcriptions", handleAuth, relayLLMRequest);
+
+// Language models
+router.post("/v1/chat/completions", handleAuth, relayLLMRequest);
+
+// Audio models
 router.post("/v1/audio/translations", handleAuth, relayLLMRequest);
+router.post("/v1/audio/transcriptions", handleAuth, relayLLMRequest);
+
+// Rerank
+router.post("/v1/rerank", handleAuth, relayLLMRequest);
 
 // Fallback route
 router.get("/", () => json({ message: "OK" }));
