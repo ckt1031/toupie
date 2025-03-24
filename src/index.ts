@@ -13,6 +13,7 @@ const router = AutoRouter({
 
 // Health check
 router.get("/health", () => json({ message: "OK" }));
+router.head("/health", () => new Response(null, { status: 200 }));
 
 // Proxy routes
 for (const proxy of proxyList) {
