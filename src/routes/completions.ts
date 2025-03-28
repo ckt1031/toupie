@@ -1,9 +1,11 @@
 import { error } from "itty-router";
 import {
 	type BodyType,
+	bodyToBodyInit,
 	getValueFromBody,
 	modifyBodyWithStringValue,
 	proxiedFetch,
+	removeFieldsFromBody,
 } from "../utils/api-utils";
 import pickHeaders from "../utils/pick-headers";
 import { pickModelChannel } from "../utils/pick-model";
@@ -75,16 +77,24 @@ export async function relayLLMRequest(request: Request) {
 	);
 
 	// Replace request.body model with the model id as we need to cast models
-	const newBody = await modifyBodyWithStringValue(
+	let newBodyObject = modifyBodyWithStringValue(
 		body,
 		"model",
 		channel.provider.model,
 	);
 
+	// Detect if the model has gemini name
+	const geminiModel = channel.provider.model.includes("gemini");
+
+	// Remove fields from body
+	if (geminiModel) {
+		newBodyObject = removeFieldsFromBody(newBodyObject, ["frequency_penalty"]);
+	}
+
 	const response = await proxiedFetch(url, {
 		headers,
 		method: request.method,
-		body: newBody,
+		body: bodyToBodyInit(newBodyObject),
 		// @ts-ignore
 		duplex: "half",
 	});
