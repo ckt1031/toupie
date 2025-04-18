@@ -8,13 +8,24 @@ interface Model {
 	owned_by: string;
 }
 
+interface ModelConfig {
+	request: string;
+	destination: string;
+}
+
 export function handleModelListRequest() {
 	const list: Model[] = [];
 	const modelIds = new Set<string>();
 
 	for (const provider of Object.values(apiConfig.providers)) {
 		for (const model of provider.models) {
-			const modelId = typeof model === "string" ? model : model.request;
+			if (typeof model !== "string" && !("request" in model)) {
+				// Skip if the model is not a string or doesn't have a request property
+				continue;
+			}
+
+			const modelId =
+				typeof model === "string" ? model : (model as ModelConfig).request;
 
 			if (modelIds.has(modelId)) continue;
 
