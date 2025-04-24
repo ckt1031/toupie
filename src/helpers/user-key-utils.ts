@@ -47,3 +47,14 @@ export async function removeUserApiKey(config: APIConfig): Promise<APIConfig> {
 	console.log(green(`API key "${name}" removed successfully.`));
 	return config;
 }
+
+export async function viewUserApiKey(config: APIConfig): Promise<void> {
+	const name = await chooseUserAPIKeyName(config);
+	const userKey = config.userKeys.find((key) => key.name === name);
+
+	if (userKey) {
+		console.log(green(`\nAPI key for "${name}": ${userKey.key}`));
+	} else {
+		console.log(red(`API key "${name}" not found.`));
+	}
+}

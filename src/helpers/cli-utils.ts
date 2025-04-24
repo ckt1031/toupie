@@ -13,7 +13,11 @@ import {
 	removeProvider,
 	validateApiConfig,
 } from "./provider-utils";
-import { addUserApiKey, removeUserApiKey } from "./user-key-utils";
+import {
+	addUserApiKey,
+	removeUserApiKey,
+	viewUserApiKey,
+} from "./user-key-utils";
 
 export const rl = readline.createInterface({
 	input: process.stdin,
@@ -54,7 +58,12 @@ export async function displayMenu(config: APIConfig): Promise<void> {
 				return addModelToExistingProvider(config);
 			},
 		},
-
+		{
+			name: "View User API Key",
+			action: async (config: APIConfig) => {
+				return viewUserApiKey(config);
+			},
+		},
 		{
 			name: "Modify Provider Settings",
 			action: async (config: APIConfig) => {
