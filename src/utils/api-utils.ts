@@ -65,37 +65,43 @@ export async function proxiedFetch(
 			headers: response.headers,
 		});
 	} catch (err) {
-		// Log the error
-		console.error(err);
-
 		const isErrorValid = err instanceof Error;
 
 		if (isErrorValid) {
 			// If cause is a Response, log the response body
 			if (err.cause instanceof Response) {
+				const response = err.cause;
+
 				// Return JSON data if available
 				// Check if response is JSON
 				if (
-					err.cause.headers.get("content-type")?.includes("application/json")
+					response.headers.get("content-type")?.includes("application/json")
 				) {
-					const json = await err.cause.json();
+					const json = await response.json();
 
 					// Log the JSON data
 					console.error("Response:", json);
 
-					return error(err.cause.status, { cause: json });
+					return error(response.status, { cause: json });
 				}
 
-				const text = await err.cause.text();
+				const text = await response.text();
+
 				// Log the text data
 				console.error("Response:", text);
 
-				return error(err.cause.status, { cause: text });
+				return error(response.status, { cause: text });
 			}
+
+			// Log the error
+			console.error(err.message);
 
 			// If cause is not a Response, return the error message
 			return error(500, err.message);
 		}
+
+		// Log the error
+		console.error(err);
 
 		// If error is not an instance of Error, return generic error
 		return error(500, "Internal Server Error");
