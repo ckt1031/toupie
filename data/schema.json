@@ -1,0 +1,108 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema",
+	"title": "LLM Relay Configuration",
+	"description": "Schema for configuring multiple AI providers and their associated keys and models.",
+	"type": "object",
+	"properties": {
+		"userKeys": {
+			"type": "array",
+			"description": "List of user keys.",
+			"items": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string",
+						"description": "Name of the key."
+					},
+					"key": {
+						"type": "string",
+						"description": "The actual API key."
+					}
+				},
+				"required": ["name", "key"]
+			}
+		},
+		"providers": {
+			"type": "object",
+			"description": "Object containing configurations for different AI providers.",
+			"additionalProperties": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string",
+						"description": "Name of the provider."
+					},
+					"azure": {
+						"type": "boolean",
+						"description": "Indicates if the provider is Azure OpenAI.",
+						"default": false
+					},
+					"azureAPIVersion": {
+						"type": "string",
+						"description": "Azure OpenAI API version (required if azure is true)."
+					},
+					"baseURL": {
+						"type": "string",
+						"description": "Base URL for the provider's API."
+					},
+					"models": {
+						"type": "array",
+						"description": "Array of supported models for the provider. Can be strings or objects with request/destination properties.",
+						"items": {
+							"oneOf": [
+								{
+									"type": "string"
+								},
+								{
+									"type": "object",
+									"properties": {
+										"request": {
+											"type": "string",
+											"description": "Model name to request."
+										},
+										"destination": {
+											"type": "string",
+											"description": "Model name to use on the provider's side."
+										}
+									},
+									"required": ["request", "destination"]
+								}
+							]
+						}
+					},
+					"testModel": {
+						"type": "string",
+						"description": "Model to use for testing the provider connection."
+					},
+					"keys": {
+						"type": "array",
+						"description": "Array of API keys associated with the provider.",
+						"items": {
+							"type": "string"
+						}
+					}
+				},
+				"required": ["name", "baseURL", "models", "keys"],
+				"dependencies": {
+					"azureAPIVersion": {
+						"properties": {
+							"azure": {
+								"const": true
+							}
+						},
+						"required": ["azure"]
+					},
+					"azure": {
+						"properties": {
+							"azureAPIVersion": {
+								"type": "string"
+							}
+						},
+						"required": ["azureAPIVersion"]
+					}
+				}
+			}
+		}
+	},
+	"required": ["userKeys", "providers"]
+}

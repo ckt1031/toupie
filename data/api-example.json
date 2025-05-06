@@ -1,4 +1,5 @@
 {
+	"$schema": "./schema.json",
 	"userKeys": [
 		{
 			"name": "Test",
@@ -30,8 +31,9 @@
 		},
 		"google-genai": {
 			"name": "Google GenAI",
+			"testModel": "gemini-2.0-flash",
 			"baseURL": "https://generativelanguage.googleapis.com/v1beta/openai",
-			"models": ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest"],
+			"models": ["gemini-2.0-flash", "gemini-2.0-pro-exp"],
 			"keys": ["AIzaSyB1234567890"]
 		}
 	}
