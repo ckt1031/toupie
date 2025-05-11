@@ -34,13 +34,13 @@ for (const provider of Object.values(apiConfig.providers) as Provider[]) {
 }
 
 function getRandomElement<T>(array: T[]): T {
-	// if (!array || array.length === 0) {
-	// 	return undefined;
-	// }
+	if (!array || array.length === 0) {
+		throw new Error("Array is empty");
+	}
 
-	// if (array.length > 2 ** 32 - 1) {
-	// 	throw new RangeError("Array too large");
-	// }
+	if (array.length > 2 ** 32 - 1) {
+		throw new RangeError("Array too large");
+	}
 
 	const maxRandomValue = 2 ** 32;
 	const randomBuffer = new Uint32Array(1);
