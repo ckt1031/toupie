@@ -20,7 +20,7 @@ interface APIConfig {
 }
 
 async function testAPIFromKey(selectedProviders: Record<string, Provider>) {
-	const config: APIConfig = apiConfig;
+	const config: APIConfig = apiConfig as APIConfig;
 
 	const table = new Table({
 		head: ["Provider", "Model", "Status", "Response Time (ms)"],
