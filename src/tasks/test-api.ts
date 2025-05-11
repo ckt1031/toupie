@@ -20,7 +20,7 @@ interface APIConfig {
 }
 
 async function testAPIFromKey(selectedProviders: Record<string, Provider>) {
-	const config: APIConfig = apiConfig as APIConfig;
+	const config = apiConfig as APIConfig;
 
 	const table = new Table({
 		head: ["Provider", "Model", "Status", "Response Time (ms)"],
@@ -154,7 +154,9 @@ async function chooseProviderWithAllOption(
 
 export default async function testAPI() {
 	// Choose providers to test
-	const selectedProviders = await chooseProviderWithAllOption(apiConfig);
+	const selectedProviders = await chooseProviderWithAllOption(
+		apiConfig as APIConfig,
+	);
 
 	await testAPIFromKey(selectedProviders);
 }
