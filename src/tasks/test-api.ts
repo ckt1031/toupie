@@ -1,6 +1,7 @@
 import cliProgress from "cli-progress";
 import Table from "cli-table3";
 import * as apiConfig from "../../data/api.json";
+import { cyan, rl, yellow } from "../helpers/cli-utils";
 
 interface Provider {
 	name: string;
@@ -18,15 +19,15 @@ interface APIConfig {
 	providers: Record<string, Provider>;
 }
 
-export default async function testAPI() {
-	const config: APIConfig = apiConfig as APIConfig;
+async function testAPIFromKey(selectedProviders: Record<string, Provider>) {
+	const config: APIConfig = apiConfig;
 
 	const table = new Table({
 		head: ["Provider", "Model", "Status", "Response Time (ms)"],
 	});
 
 	let totalKeys = 0;
-	for (const providerKey in config.providers) {
+	for (const providerKey in selectedProviders) {
 		totalKeys += config.providers[providerKey].keys.length;
 	}
 
@@ -43,7 +44,7 @@ export default async function testAPI() {
 	});
 
 	let currentKey = 0;
-	for (const providerKey in config.providers) {
+	for (const providerKey in selectedProviders) {
 		const provider = config.providers[providerKey];
 
 		const testModel = provider.testModel;
@@ -109,4 +110,37 @@ export default async function testAPI() {
 
 	progressBar.stop();
 	console.log(table.toString());
+}
+
+async function chooseProviderWithAllOption(
+	config: APIConfig,
+): Promise<Record<string, Provider>> {
+	// List providers with numbers
+	console.log(cyan("\nAvailable Providers:"));
+	const providerList = Object.keys(config.providers);
+	providerList.forEach((providerName, index) => {
+		console.log(
+			`${index + 1}\t${config.providers[providerName].name} (${providerName})`,
+		);
+	});
+	console.log(`${providerList.length + 1}\tAll`);
+	const choice = await rl.question(yellow("Enter the option number: "));
+
+	const providerIndex = Number.parseInt(choice) - 1;
+
+	if (providerIndex === providerList.length) {
+		return config.providers;
+	}
+
+	return {
+		[providerList[providerIndex]]:
+			config.providers[providerList[providerIndex]],
+	};
+}
+
+export default async function testAPI() {
+	// Choose providers to test
+	const selectedProviders = await chooseProviderWithAllOption(apiConfig);
+
+	await testAPIFromKey(selectedProviders);
 }
