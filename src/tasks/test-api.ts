@@ -67,10 +67,19 @@ async function testAPIFromKey(selectedProviders: Record<string, Provider>) {
 
 			progressBar.update(++currentKey, { providerName: provider.name });
 
-			const requestBody = {
+			/** Chat completion request body */
+			let requestBody: Record<string, unknown> = {
 				model: testModel,
 				messages: [{ role: "user", content: "Say 1 only" }],
 			};
+
+			// Check if the model is embedding model
+			if (testModel.includes("embed")) {
+				requestBody = {
+					model: testModel,
+					input: "Hello, world!",
+				};
+			}
 
 			const headers: Record<string, string> = {
 				"Content-Type": "application/json",
@@ -83,6 +92,11 @@ async function testAPIFromKey(selectedProviders: Record<string, Provider>) {
 			} else {
 				headers.Authorization = `Bearer ${apiKey}`;
 				url += "/chat/completions";
+			}
+
+			// Replace the path if the model is embedding model
+			if (testModel.includes("embed")) {
+				url = url.replace("/chat/completions", "/embeddings");
 			}
 
 			const startTime = Date.now();
