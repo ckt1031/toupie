@@ -14,7 +14,7 @@
 		"@biomejs/biome": "1.9.4",
 		"@types/bun": "^1.2.12",
 		"@types/cli-progress": "^3.11.6",
-		"@types/node": "^22.15.12",
+		"@types/node": "^22.15.17",
 		"typescript": "^5.8.3",
 		"vercel": "^41.7.0",
 		"wrangler": "^4.14.2"
