@@ -19,13 +19,14 @@ export function handleModelListRequest() {
 
 	for (const provider of Object.values(apiConfig.providers)) {
 		for (const model of provider.models) {
-			if (typeof model !== "string" && !("request" in model)) {
-				// Skip if the model is not a string or doesn't have a request property
-				continue;
-			}
+			let modelId = "";
 
-			const modelId =
-				typeof model === "string" ? model : (model as ModelConfig).request;
+			if (typeof model === "string") {
+				modelId = model;
+			} else {
+				modelId =
+					(model as ModelConfig).request || (model as ModelConfig).destination;
+			}
 
 			if (modelIds.has(modelId)) continue;
 

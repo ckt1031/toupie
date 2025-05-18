@@ -91,6 +91,50 @@ export async function relayLLMRequest(request: Request) {
 		newBodyObject = removeFieldsFromBody(newBodyObject, ["frequency_penalty"]);
 	}
 
+	// For gemini models with "thinkingConfig" field, transform it to "reasoning_effort"
+	if (typeof newBodyObject === "object" && "thinkingConfig" in newBodyObject) {
+		interface ThinkingConfig {
+			includeThoughts: boolean;
+			thinkingBudget: number;
+		}
+
+		// Gemini compatible layer
+		const thinkingConfig =
+			newBodyObject.thinkingConfig as unknown as ThinkingConfig;
+
+		if (thinkingConfig.includeThoughts) {
+			// reasoning_effort: none (=0), high (>10000), medium (>5000), low (>0)
+			const reasoningEffort =
+				thinkingConfig.thinkingBudget > 10000
+					? "high"
+					: thinkingConfig.thinkingBudget > 5000
+						? "medium"
+						: thinkingConfig.thinkingBudget > 0
+							? "low"
+							: "none";
+
+			newBodyObject = modifyBodyWithStringValue(
+				newBodyObject,
+				"reasoning_effort",
+				reasoningEffort,
+			);
+		}
+
+		newBodyObject = removeFieldsFromBody(newBodyObject, ["thinkingConfig"]);
+	}
+
+	// Set reasoning_effort to none if it's not set
+	if (
+		typeof newBodyObject === "object" &&
+		!("reasoning_effort" in newBodyObject)
+	) {
+		newBodyObject = modifyBodyWithStringValue(
+			newBodyObject,
+			"reasoning_effort",
+			"none",
+		);
+	}
+
 	const response = await proxiedFetch(url, {
 		headers,
 		method: request.method,

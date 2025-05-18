@@ -9,7 +9,11 @@ export const apiConfigSchema = z.object({
 			models: z.array(
 				z.union([
 					z.string(),
-					z.object({ request: z.string(), destination: z.string() }),
+					z.object({
+						request: z.optional(z.string()),
+						destination: z.string(),
+						reasoning: z.optional(z.boolean()),
+					}),
 				]),
 			),
 			keys: z.array(z.string()),

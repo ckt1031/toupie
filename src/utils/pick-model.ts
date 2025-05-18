@@ -9,7 +9,8 @@ const modelIdToProviders: Record<string, Provider[]> = {};
 for (const provider of Object.values(apiConfig.providers) as Provider[]) {
 	for (const model of provider.models) {
 		// Get the modelId
-		const modelId = typeof model === "string" ? model : model.request;
+		const modelId =
+			typeof model === "string" ? model : model.request || model.destination;
 
 		// If the modelId is not in the map, add it
 		if (!modelIdToProviders[modelId]) modelIdToProviders[modelId] = [];
@@ -21,13 +22,14 @@ for (const provider of Object.values(apiConfig.providers) as Provider[]) {
 // Create a map of modelId to model
 const modelIdToModel: Record<
 	string,
-	string | { request: string; destination: string }
+	string | APIConfig["providers"][string]["models"][number]
 > = {};
 
 for (const provider of Object.values(apiConfig.providers) as Provider[]) {
 	for (const model of provider.models) {
 		// Get the modelId
-		const modelId = typeof model === "string" ? model : model.request;
+		const modelId =
+			typeof model === "string" ? model : model.request || model.destination;
 
 		modelIdToModel[modelId] = model;
 	}
