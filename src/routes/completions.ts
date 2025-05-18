@@ -92,7 +92,12 @@ export async function relayLLMRequest(request: Request) {
 	}
 
 	// For gemini models with "thinkingConfig" field, transform it to "reasoning_effort"
-	if (typeof newBodyObject === "object" && "thinkingConfig" in newBodyObject) {
+	if (
+		typeof newBodyObject === "object" &&
+		"thinkingConfig" in newBodyObject &&
+		newBodyObject.thinkingConfig &&
+		channel.provider.reasoning
+	) {
 		interface ThinkingConfig {
 			includeThoughts: boolean;
 			thinkingBudget: number;
@@ -120,13 +125,15 @@ export async function relayLLMRequest(request: Request) {
 			);
 		}
 
+		// Remove thinkingConfig from body
 		newBodyObject = removeFieldsFromBody(newBodyObject, ["thinkingConfig"]);
 	}
 
 	// Set reasoning_effort to none if it's not set
 	if (
 		typeof newBodyObject === "object" &&
-		!("reasoning_effort" in newBodyObject)
+		!("reasoning_effort" in newBodyObject) &&
+		channel.provider.reasoning
 	) {
 		newBodyObject = modifyBodyWithStringValue(
 			newBodyObject,

@@ -19,25 +19,16 @@ for (const provider of Object.values(apiConfig.providers) as Provider[]) {
 	}
 }
 
-// Create a map of modelId to model
-const modelIdToModel: Record<
-	string,
-	string | APIConfig["providers"][string]["models"][number]
-> = {};
-
-for (const provider of Object.values(apiConfig.providers) as Provider[]) {
-	for (const model of provider.models) {
-		// Get the modelId
-		const modelId =
-			typeof model === "string" ? model : model.request || model.destination;
-
-		modelIdToModel[modelId] = model;
-	}
-}
+console.log(modelIdToProviders);
 
 function getRandomElement<T>(array: T[]): T {
 	if (!array || array.length === 0) {
 		throw new Error("Array is empty");
+	}
+
+	// Return the first element if the array has only one element to save time
+	if (array.length === 1) {
+		return array[0];
 	}
 
 	if (array.length > 2 ** 32 - 1) {
@@ -57,6 +48,30 @@ function getRandomElement<T>(array: T[]): T {
 	return array[randomIndex];
 }
 
+function getModelInfoFromProvider(
+	provider: Provider,
+	modelId: string,
+): Exclude<APIConfig["providers"][string]["models"][number], string> {
+	const model = provider.models.find((model) => {
+		return typeof model === "string"
+			? model === modelId
+			: model.request === modelId || model.destination === modelId;
+	});
+
+	if (!model)
+		throw new Error(`Model ${modelId} not found in provider ${provider.name}`);
+
+	return {
+		request:
+			typeof model === "string" ? model : model.request || model.destination,
+		destination: typeof model === "string" ? model : model.destination,
+		reasoning:
+			typeof model === "object" && "reasoning" in model
+				? (model.reasoning ?? false)
+				: false,
+	};
+}
+
 /**
  * Randomly pick a provider for the model based on the model id
  */
@@ -65,30 +80,30 @@ export function pickModelChannel(modelId: string) {
 
 	if (!providers || providers.length === 0) return null;
 
-	// Randomly pick a provider from the filtered list
-	const provider = getRandomElement(providers);
+	// First, we will randomly pick a provider from the filtered list
+	const pickedProvider = getRandomElement(providers);
 
 	// Random pick a key from the provider
-	const key = getRandomElement(provider.keys);
+	const pickedKeyFromProvider = getRandomElement(pickedProvider.keys);
 
 	// Handle model request
-	const model = modelIdToModel[modelId];
-
-	if (!model) return null;
+	const chosenModel = getModelInfoFromProvider(pickedProvider, modelId);
 
 	return {
 		apiKey: {
-			index: provider.keys.indexOf(key),
-			value: key,
+			index: pickedProvider.keys.indexOf(pickedKeyFromProvider),
+			value: pickedKeyFromProvider,
 		},
 		provider: {
-			name: provider.name,
-			model: typeof model === "string" ? model : model.destination,
-			baseURL: provider.baseURL,
-			isAzure: "azure" in provider ? (provider.azure as boolean) : false,
+			name: pickedProvider.name,
+			model: chosenModel.destination,
+			reasoning: chosenModel.reasoning,
+			baseURL: pickedProvider.baseURL,
+			isAzure:
+				"azure" in pickedProvider ? (pickedProvider.azure as boolean) : false,
 			azureAPIVersion:
-				"azureAPIVersion" in provider
-					? (provider.azureAPIVersion as string)
+				"azureAPIVersion" in pickedProvider
+					? (pickedProvider.azureAPIVersion as string)
 					: undefined,
 		},
 	};
