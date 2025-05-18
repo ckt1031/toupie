@@ -3,6 +3,7 @@ import chalk from "chalk";
 import { type APIConfig, apiConfigSchema } from "../schema";
 import testAPI from "../tasks/test-api";
 import { saveApiConfig } from "./api-config";
+import { listAllModels } from "./models-utils";
 import {
 	addKeyToExistingProvider,
 	addModelToExistingProvider,
@@ -104,6 +105,15 @@ export async function displayMenu(config: APIConfig): Promise<void> {
 			name: "Test API Models",
 			action: async () => {
 				return testAPI();
+			},
+		},
+		{
+			name: "List All Models",
+			action: async () => {
+				const models = listAllModels();
+				for (const model of models) {
+					console.log(model.id);
+				}
 			},
 		},
 		{
