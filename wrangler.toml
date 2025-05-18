@@ -1,12 +1,8 @@
 name = "llm-relay"
 main = "src/index.ts"
-compatibility_date = "2024-11-11"
+compatibility_date = "2025-05-05"
 
 assets = { directory = "./public" }
 
 [placement]
 mode = "smart"
-
-[observability]
-enabled = true
-head_sampling_rate = 0.1 # 10% of requests are logged
