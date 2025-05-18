@@ -19,8 +19,6 @@ for (const provider of Object.values(apiConfig.providers) as Provider[]) {
 	}
 }
 
-console.log(modelIdToProviders);
-
 function getRandomElement<T>(array: T[]): T {
 	if (!array || array.length === 0) {
 		throw new Error("Array is empty");
