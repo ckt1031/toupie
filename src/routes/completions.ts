@@ -1,4 +1,5 @@
 import { error } from "itty-router";
+import { adjustCompletionRequestBody } from "../utils/adjust-request";
 import {
 	type BodyType,
 	bodyToBodyInit,
@@ -83,64 +84,7 @@ export async function relayLLMRequest(request: Request) {
 		channel.provider.model,
 	);
 
-	// Detect if the model has gemini name
-	const geminiModel = channel.provider.model.includes("gemini");
-
-	// Remove fields from body
-	if (geminiModel) {
-		newBodyObject = removeFieldsFromBody(newBodyObject, ["frequency_penalty"]);
-	}
-
-	// For gemini models with "thinkingConfig" field, transform it to "reasoning_effort"
-	if (
-		typeof newBodyObject === "object" &&
-		"thinkingConfig" in newBodyObject &&
-		newBodyObject.thinkingConfig &&
-		channel.provider.reasoning
-	) {
-		interface ThinkingConfig {
-			includeThoughts: boolean;
-			thinkingBudget: number;
-		}
-
-		// Gemini compatible layer
-		const thinkingConfig =
-			newBodyObject.thinkingConfig as unknown as ThinkingConfig;
-
-		if (thinkingConfig.includeThoughts) {
-			// reasoning_effort: none (=0), high (>10000), medium (>5000), low (>0)
-			const reasoningEffort =
-				thinkingConfig.thinkingBudget > 10000
-					? "high"
-					: thinkingConfig.thinkingBudget > 5000
-						? "medium"
-						: thinkingConfig.thinkingBudget > 0
-							? "low"
-							: "none";
-
-			newBodyObject = modifyBodyWithStringValue(
-				newBodyObject,
-				"reasoning_effort",
-				reasoningEffort,
-			);
-		}
-
-		// Remove thinkingConfig from body
-		newBodyObject = removeFieldsFromBody(newBodyObject, ["thinkingConfig"]);
-	}
-
-	// Set reasoning_effort to none if it's not set
-	if (
-		typeof newBodyObject === "object" &&
-		!("reasoning_effort" in newBodyObject) &&
-		channel.provider.reasoning
-	) {
-		newBodyObject = modifyBodyWithStringValue(
-			newBodyObject,
-			"reasoning_effort",
-			"none",
-		);
-	}
+	newBodyObject = adjustCompletionRequestBody(newBodyObject, channel);
 
 	const response = await proxiedFetch(url, {
 		headers,

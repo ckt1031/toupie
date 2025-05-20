@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 export const apiConfigSchema = z.object({
+	/**
+	 * Keys received from this project API server
+	 */
 	userKeys: z.array(z.object({ name: z.string(), key: z.string() })),
 	providers: z.record(
 		z.object({
@@ -30,8 +33,17 @@ export const apiConfigSchema = z.object({
 					}),
 				]),
 			),
+			/**
+			 * API Keys SENT to the providiers
+			 */
 			keys: z.array(z.string()),
+			/**
+			 * Is Microsoft Azure API
+			 */
 			azure: z.boolean().optional(),
+			/**
+			 * This is required if API is Azure mode
+			 */
 			azureAPIVersion: z.string().optional(),
 		}),
 	),
