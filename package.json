@@ -7,7 +7,7 @@
 		"helper": "bun run helper.ts",
 		"lint": "tsc --noEmit && biome lint",
 		"lint:fix": "tsc --noEmit && biome check --write .",
-		"deploy:vercel": "vercel deploy . --prod --no-wait",
+		"deploy:vercel": "vercel deploy . --prod",
 		"deploy:wrangler": "wrangler deploy"
 	},
 	"devDependencies": {
