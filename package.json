@@ -17,7 +17,7 @@
 		"@types/node": "^22.15.18",
 		"typescript": "^5.8.3",
 		"vercel": "^41.7.6",
-		"wrangler": "^4.14.4"
+		"wrangler": "^4.16.1"
 	},
 	"dependencies": {
 		"chalk": "^5.4.1",
