@@ -17,6 +17,14 @@ bun run dev
 bun run deploy # Deploy to Vercel
 ```
 
+### Chat Completion
+
+```bash
+curl -X POST https://llm-relay.vercel.app/v1/chat/completions \
+-H "Content-Type: application/json" \
+-d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "Hello, how are you?"}]}'
+```
+
 ## CLI Tool (`helper.ts`)
 
 This helper tool helps manage the `api.json` configuration file, allowing you to add user API keys, add providers, add keys to existing providers, add models to existing providers, and modify provider settings.

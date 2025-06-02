@@ -63,10 +63,6 @@
 										"destination": {
 											"type": "string",
 											"description": "Model name to use on the provider's side."
-										},
-										"reasoning": {
-											"type": "boolean",
-											"description": "The model has reasoning capability"
 										}
 									},
 									"required": ["destination"]

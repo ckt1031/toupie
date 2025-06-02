@@ -63,10 +63,6 @@ function getModelInfoFromProvider(
 		request:
 			typeof model === "string" ? model : model.request || model.destination,
 		destination: typeof model === "string" ? model : model.destination,
-		reasoning:
-			typeof model === "object" && "reasoning" in model
-				? (model.reasoning ?? false)
-				: false,
 	};
 }
 
@@ -95,7 +91,6 @@ export function pickModelChannel(modelId: string) {
 		provider: {
 			name: pickedProvider.name,
 			model: chosenModel.destination,
-			reasoning: chosenModel.reasoning,
 			baseURL: pickedProvider.baseURL,
 			isAzure:
 				"azure" in pickedProvider ? (pickedProvider.azure as boolean) : false,
