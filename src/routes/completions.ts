@@ -16,7 +16,7 @@ export async function relayLLMRequest(request: Request) {
 	const isBodyForm = contentType?.includes("multipart/form-data") ?? false;
 
 	// Only /v1/audio/* can be form data
-	if (isBodyForm && !request.url.startsWith("/v1/audio/")) {
+	if (isBodyForm && !request.url.includes("/v1/audio/")) {
 		return error(400, "Form data is not allowed for this endpoint");
 	}
 
