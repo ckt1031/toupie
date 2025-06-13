@@ -6,3 +6,6 @@ assets = { directory = "./public" }
 
 [placement]
 mode = "smart"
+
+[observability.logs]
+enabled = true
