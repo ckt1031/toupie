@@ -1,8 +1,8 @@
-# LLM Relay API
+# Toupie
 
-This is a OpenAI API relay server, which can be used to relay requests to multiple providers.
+Toupie (French for "spinning top" or, in a more technical sense, "router" or "turntable") is an LLM Relay API server. It acts as a central point, routing your OpenAI API-formatted requests to various Large Language Model (LLM) providers based on your configuration, simplifying how you interact with diverse AI models.
 
-The project supports serverless deployment on Vercel.
+The project supports serverless deployment on Vercel and Cloudflare Workers.
 
 ## Installation
 
@@ -20,7 +20,7 @@ bun run deploy # Deploy to Vercel
 ### Chat Completion
 
 ```bash
-curl -X POST https://llm-relay.vercel.app/v1/chat/completions \
+curl -X POST https://YOUR_DOMAIN/v1/chat/completions \
 -H "Content-Type: application/json" \
 -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "Hello, how are you?"}]}'
 ```

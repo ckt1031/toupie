@@ -1,6 +1,6 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema",
-	"title": "LLM Relay Configuration",
+	"title": "Toupie Configuration",
 	"description": "Schema for configuring multiple AI providers and their associated keys and models.",
 	"type": "object",
 	"properties": {
