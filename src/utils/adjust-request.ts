@@ -1,8 +1,4 @@
-import {
-	type BodyType,
-	modifyBodyWithStringValue,
-	removeFieldsFromBody,
-} from "../utils/api-utils";
+import { type BodyType, removeFieldsFromBody } from "../utils/api-utils";
 import type { pickModelChannel } from "./pick-model";
 
 /**

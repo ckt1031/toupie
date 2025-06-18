@@ -138,7 +138,7 @@ export async function addProvider(config: APIConfig): Promise<APIConfig> {
 	);
 	const isAzure = isAzureInput.toLowerCase() === "yes";
 
-	let azureAPIVersion: string | undefined = undefined;
+	let azureAPIVersion: string | undefined;
 	if (isAzure) {
 		azureAPIVersion = await rl.question(
 			"Enter Azure API Version (e.g., 2024-10-21): ",

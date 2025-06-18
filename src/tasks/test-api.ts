@@ -112,7 +112,7 @@ async function testAPIFromKey(selectedProviders: Record<string, Provider>) {
 
 				responseTime = Date.now() - startTime;
 				status = `${response.status} ${response.statusText}`;
-			} catch (error) {
+			} catch (_error) {
 				responseTime = Date.now() - startTime;
 			}
 
