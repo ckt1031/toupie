@@ -1,9 +1,14 @@
-const pickHeaders = (headers: Headers, keys: (string | RegExp)[]): Headers => {
+const pickHeaders = (
+	headers: Headers,
+	keys: (string | RegExp | undefined)[],
+): Headers => {
 	const picked = new Headers();
 	const regexKeys: RegExp[] = [];
 	const stringKeys: Set<string> = new Set();
 
 	for (const key of keys) {
+		if (!key) continue;
+
 		if (typeof key === "string") {
 			stringKeys.add(key);
 		} else {

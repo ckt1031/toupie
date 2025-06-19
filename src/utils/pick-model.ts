@@ -69,7 +69,7 @@ function getModelInfoFromProvider(
 /**
  * Randomly pick a provider for the model based on the model id
  */
-export function pickModelChannel(modelId: string) {
+export function pickModelChannel(modelId: string, excludeKeys: string[] = []) {
 	const providers = modelIdToProviders[modelId];
 
 	if (!providers || providers.length === 0) return null;
@@ -78,7 +78,9 @@ export function pickModelChannel(modelId: string) {
 	const pickedProvider = getRandomElement(providers);
 
 	// Random pick a key from the provider
-	const pickedKeyFromProvider = getRandomElement(pickedProvider.keys);
+	const pickedKeyFromProvider = getRandomElement(
+		pickedProvider.keys.filter((key) => !excludeKeys.includes(key)),
+	);
 
 	// Handle model request
 	const chosenModel = getModelInfoFromProvider(pickedProvider, modelId);
