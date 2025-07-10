@@ -27,8 +27,29 @@ export async function chooseUserAPIKeyName(config: APIConfig): Promise<string> {
 export async function addUserApiKey(config: APIConfig): Promise<APIConfig> {
 	const name = await rl.question("Enter user API key name: ");
 	const key = `sk-${generateKey()}`;
-	config.userKeys.push({ name, key });
+
+	// Ask for allowed providers
+	const allowedProvidersInput = await rl.question(
+		yellow(
+			"Enter allowed provider names (comma-separated, leave empty for all providers): ",
+		),
+	);
+
+	let allowedProviders: string[] | undefined;
+	if (allowedProvidersInput.trim()) {
+		allowedProviders = allowedProvidersInput
+			.split(",")
+			.map((p) => p.trim())
+			.filter((p) => p.length > 0);
+	}
+
+	config.userKeys.push({ name, key, allowedProviders });
 	console.log(green(`Generated API key: ${key}`));
+	if (allowedProviders && allowedProviders.length > 0) {
+		console.log(green(`Allowed providers: ${allowedProviders.join(", ")}`));
+	} else {
+		console.log(green("All providers are allowed"));
+	}
 	return config;
 }
 
@@ -54,6 +75,13 @@ export async function viewUserApiKey(config: APIConfig): Promise<void> {
 
 	if (userKey) {
 		console.log(green(`\nAPI key for "${name}": ${userKey.key}`));
+		if (userKey.allowedProviders && userKey.allowedProviders.length > 0) {
+			console.log(
+				green(`Allowed providers: ${userKey.allowedProviders.join(", ")}`),
+			);
+		} else {
+			console.log(green("All providers are allowed"));
+		}
 	} else {
 		console.log(red(`API key "${name}" not found.`));
 	}

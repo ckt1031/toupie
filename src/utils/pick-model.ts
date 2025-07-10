@@ -2,6 +2,7 @@ import apiConfig from "../../data/api.json";
 import type { APIConfig } from "../schema";
 
 type Provider = APIConfig["providers"][string];
+type UserKey = APIConfig["userKeys"][number];
 
 // Create a map of modelId to providers
 const modelIdToProviders: Record<string, Provider[]> = {};
@@ -67,15 +68,59 @@ function getModelInfoFromProvider(
 }
 
 /**
- * Randomly pick a provider for the model based on the model id
+ * Filter providers based on user key's allowedProviders
  */
-export function pickModelChannel(modelId: string, excludeKeys: string[] = []) {
+function filterProvidersByUserKey(
+	providers: Provider[],
+	userKey: UserKey,
+): Provider[] {
+	// If allowedProviders is not specified, allow all providers
+	if (!userKey.allowedProviders) {
+		return providers;
+	}
+
+	// If allowedProviders is empty, return no providers (reject)
+	if (userKey.allowedProviders.length === 0) {
+		return [];
+	}
+
+	// Filter providers to only include those in allowedProviders
+	return providers.filter((provider) => {
+		// Find the provider key in the config that matches this provider
+		const providerKey = Object.keys(apiConfig.providers).find(
+			(key) =>
+				apiConfig.providers[key as keyof typeof apiConfig.providers] ===
+				provider,
+		);
+
+		return providerKey && userKey.allowedProviders?.includes(providerKey);
+	});
+}
+
+/**
+ * Randomly pick a provider for the model based on the model id and user key restrictions
+ */
+export function pickModelChannel(
+	modelId: string,
+	excludeKeys: string[] = [],
+	userKey?: UserKey,
+) {
 	const providers = modelIdToProviders[modelId];
 
 	if (!providers || providers.length === 0) return null;
 
+	// Filter providers based on user key restrictions
+	const allowedProviders = userKey
+		? filterProvidersByUserKey(providers, userKey)
+		: providers;
+
+	// If no providers are allowed after filtering, return null
+	if (allowedProviders.length === 0) {
+		return null;
+	}
+
 	// First, we will randomly pick a provider from the filtered list
-	const pickedProvider = getRandomElement(providers);
+	const pickedProvider = getRandomElement(allowedProviders);
 
 	// Random pick a key from the provider
 	const pickedKeyFromProvider = getRandomElement(

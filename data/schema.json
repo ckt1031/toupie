@@ -17,6 +17,13 @@
 					"key": {
 						"type": "string",
 						"description": "The actual API key."
+					},
+					"allowedProviders": {
+						"type": "array",
+						"description": "List of allowed provider names. If empty or not provided, all providers are allowed. If provided, only these providers can be used with this key.",
+						"items": {
+							"type": "string"
+						}
 					}
 				},
 				"required": ["name", "key"]

@@ -3,6 +3,7 @@
 	"userKeys": [
 		{
 			"name": "Test",
+			"allowedProviders": ["openrouter"],
 			"key": "sk-123456"
 		}
 	],

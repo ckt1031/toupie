@@ -1,7 +1,13 @@
 import { error } from "itty-router";
 import apiConfig from "../data/api.json";
+import type { APIConfig } from "./schema";
 
 const apiKeyMap = new Map(apiConfig.userKeys.map((item) => [item.key, item]));
+
+// Extend the Request interface to include userKey
+interface AuthenticatedRequest extends Request {
+	userKey?: APIConfig["userKeys"][number];
+}
 
 /**
  *  Match keys in Authorization header
@@ -17,4 +23,7 @@ export function handleAuth(request: Request) {
 	if (!keyData) return error(401, "Invalid key");
 
 	console.info(`Key: ${keyData.name}`);
+
+	// Store the user key data in the request object for later use
+	(request as AuthenticatedRequest).userKey = keyData;
 }

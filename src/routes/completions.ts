@@ -1,4 +1,5 @@
 import { error } from "itty-router";
+import type { APIConfig } from "../schema";
 import {
 	type BodyType,
 	bodyToBodyInit,
@@ -9,6 +10,11 @@ import {
 } from "../utils/api-utils";
 import pickHeaders from "../utils/pick-headers";
 import { pickModelChannel } from "../utils/pick-model";
+
+// Extend the Request interface to include userKey
+interface AuthenticatedRequest extends Request {
+	userKey?: APIConfig["userKeys"][number];
+}
 
 export async function relayLLMRequest(request: Request) {
 	const contentType = request.headers.get("content-type");
@@ -26,6 +32,9 @@ export async function relayLLMRequest(request: Request) {
 
 	// Model is required
 	if (!model) return error(400, "Model is required");
+
+	// Get user key data from request object (set by handleAuth middleware)
+	const userKey = (request as AuthenticatedRequest).userKey;
 
 	// We can start logic with retries
 	let attempts = 0;
@@ -46,10 +55,16 @@ export async function relayLLMRequest(request: Request) {
 	while (attempts < maxAttempts) {
 		attempts++;
 
-		const channel = pickModelChannel(model, failedKeys);
+		const channel = pickModelChannel(model, failedKeys, userKey);
 
 		// If we don't have a channel, we will return an error, because this is unexpected
-		if (!channel) return error(404, `Model ${model} not found`);
+		if (!channel) {
+			// Check if it's because no providers are allowed for this user key
+			if (userKey?.allowedProviders && userKey.allowedProviders.length === 0) {
+				return error(403, "No providers are allowed for this API key");
+			}
+			return error(404, `Model ${model} not found`);
+		}
 
 		let newBodyObject = modifyBodyWithStringValue(
 			body,

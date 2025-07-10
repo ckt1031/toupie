@@ -4,7 +4,17 @@ export const apiConfigSchema = z.object({
 	/**
 	 * Keys received from this project API server
 	 */
-	userKeys: z.array(z.object({ name: z.string(), key: z.string() })),
+	userKeys: z.array(
+		z.object({
+			name: z.string(),
+			key: z.string(),
+			/**
+			 * List of allowed provider names. If empty or not provided, all providers are allowed.
+			 * If provided, only these providers can be used with this key.
+			 */
+			allowedProviders: z.array(z.string()).optional(),
+		}),
+	),
 	providers: z.record(
 		z.string(),
 		z.object({
