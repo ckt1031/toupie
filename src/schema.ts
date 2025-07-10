@@ -6,6 +6,7 @@ export const apiConfigSchema = z.object({
 	 */
 	userKeys: z.array(z.object({ name: z.string(), key: z.string() })),
 	providers: z.record(
+		z.string(),
 		z.object({
 			name: z.string(),
 			baseURL: z.string(),
