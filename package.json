@@ -9,6 +9,7 @@
 		"lint:fix": "tsc --noEmit && biome check --write .",
 		"deploy:vercel": "vercel deploy . --prod --no-wait",
 		"deploy:wrangler": "wrangler deploy",
+		"postbuild": "bun run scripts/validate-config.ts",
 		"postinstall": "bun run scripts/generate-schema.ts"
 	},
 	"devDependencies": {
