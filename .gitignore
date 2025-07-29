@@ -3,4 +3,5 @@ node_modules
 .wrangler
 .env
 /data/api.json
+/data/schema.json
 .DS_Store
