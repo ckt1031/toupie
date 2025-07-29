@@ -2,22 +2,9 @@ import cliProgress from "cli-progress";
 import Table from "cli-table3";
 import * as apiConfig from "../../data/api.json";
 import { cyan, rl, yellow } from "../helpers/cli-utils";
+import type { APIConfig } from "../schema";
 
-interface Provider {
-	name: string;
-
-	azure?: boolean;
-	azureAPIVersion?: string;
-
-	baseURL: string;
-	models: string[] | { request: string; destination: string }[];
-	keys: string[];
-	testModel?: string;
-}
-
-interface APIConfig {
-	providers: Record<string, Provider>;
-}
+type Provider = APIConfig["providers"][string];
 
 async function testAPIFromKey(selectedProviders: Record<string, Provider>) {
 	const config = apiConfig as APIConfig;
