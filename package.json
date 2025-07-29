@@ -8,7 +8,8 @@
 		"lint": "tsc --noEmit && biome lint",
 		"lint:fix": "tsc --noEmit && biome check --write .",
 		"deploy:vercel": "vercel deploy . --prod --no-wait",
-		"deploy:wrangler": "wrangler deploy"
+		"deploy:wrangler": "wrangler deploy",
+		"postinstall": "bun run scripts/generate-schema.ts"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.1.1",

@@ -2,6 +2,10 @@ import { z } from "zod";
 
 export const apiConfigSchema = z.object({
 	/**
+	 * JSON Schema reference
+	 */
+	$schema: z.string().optional(),
+	/**
 	 * Keys received from this project API server
 	 */
 	userKeys: z.array(
@@ -48,6 +52,8 @@ export const apiConfigSchema = z.object({
 			 * This is required if API is Azure mode
 			 */
 			azureAPIVersion: z.string().optional(),
+
+			testModel: z.string().optional(),
 		}),
 	),
 });
