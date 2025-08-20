@@ -105,8 +105,6 @@ export async function relayLLMRequest(request: Request) {
 			message = `[${attempts}/${maxAttempts}] ${message}`;
 		}
 
-		console.info(message);
-
 		try {
 			const response = await proxiedFetch(url, {
 				headers,
