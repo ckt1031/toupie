@@ -1,8 +1,12 @@
 # Toupie
 
-Toupie (French for "spinning top" or, in a more technical sense, "router" or "turntable") is an LLM Relay API server. It acts as a central point, routing your OpenAI API-formatted requests to various Large Language Model (LLM) providers based on your configuration, simplifying how you interact with diverse AI models.
+Toupie (French for "spinning top" or, in a more technical sense, "router" or "turntable") is an LLM Relay API server with OpenAI API format.
 
-The project supports serverless deployment on Vercel and Cloudflare Workers.
+## Target Users and Use Cases
+
+The API uses just **one JSON file stored on the server** - no database, no dashboard, and no visual API‑key manager. This keeps routing simple on a server‑less platform.
+
+If you need a UI or more advanced features, you should go with OpenRouter with BYOK (Bring Your Own Key), the [New API](https://github.com/QuantumNous/new-api), or the [LiteLLM Proxy](https://github.com/BerriAI/liteLLM-proxy).
 
 ## Installation
 
@@ -56,7 +60,10 @@ The file is located in `./data/api.json`, make sure to create it if it doesn't e
     "userKeys": [
         {
             "name": "Test",
-            "key": "sk-123456" // User key, generated locally
+            "key": "sk-123456", // User key, generated locally
+            "allowedProviders": [ // Optional, if not provided, all providers are allowed
+                "google-genai" // Only allow Google GenAI provider
+            ],
         }
     ],
     "providers": {
