@@ -16,7 +16,7 @@ export async function chooseProvider(config: APIConfig): Promise<string> {
 	});
 	const choice = await rl.question(yellow("Enter the provider number: "));
 
-	const providerIndex = Number.parseInt(choice) - 1;
+	const providerIndex = Number.parseInt(choice, 10) - 1;
 
 	return providerList[providerIndex];
 }

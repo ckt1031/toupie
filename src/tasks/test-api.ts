@@ -127,7 +127,7 @@ async function chooseProviderWithAllOption(
 	console.log(`${providerList.length + 1}\tAll`);
 	const choice = await rl.question(yellow("Enter the option number: "));
 
-	const providerIndex = Number.parseInt(choice) - 1;
+	const providerIndex = Number.parseInt(choice, 10) - 1;
 
 	if (providerIndex === providerList.length) {
 		return config.providers;

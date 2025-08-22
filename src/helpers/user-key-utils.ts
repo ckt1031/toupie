@@ -19,7 +19,7 @@ export async function chooseUserAPIKeyName(config: APIConfig): Promise<string> {
 
 	const choice = await rl.question(yellow("Enter the key number: "));
 
-	const keyIndex = Number.parseInt(choice) - 1;
+	const keyIndex = Number.parseInt(choice, 10) - 1;
 
 	return config.userKeys[keyIndex].name;
 }

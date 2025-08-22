@@ -53,7 +53,7 @@ export const handleProxy = async (
 		headers,
 		method: request.method,
 		body: request.body,
-		// @ts-ignore
+		// @ts-expect-error
 		duplex: "half",
 	});
 

@@ -138,7 +138,7 @@ export async function displayMenu(config: APIConfig): Promise<void> {
 
 	let updatedConfig: APIConfig | undefined;
 
-	const actionIndex = Number.parseInt(choice) - 1;
+	const actionIndex = Number.parseInt(choice, 10) - 1;
 	if (actions[actionIndex]) {
 		const res = await actions[actionIndex].action(config);
 
