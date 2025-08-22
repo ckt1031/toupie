@@ -12,11 +12,16 @@ interface ModelConfig {
 	destination: string;
 }
 
-export function listAllModels() {
+export function listAllModels(allowedProviders?: string[]) {
 	const list: Model[] = [];
 	const modelIds = new Set<string>();
 
-	for (const provider of Object.values(apiConfig.providers)) {
+	for (const [providerKey, provider] of Object.entries(apiConfig.providers)) {
+		// If allowedProviders is specified, only include providers in the allowed list
+		if (allowedProviders && !allowedProviders.includes(providerKey)) {
+			continue;
+		}
+
 		for (const model of provider.models) {
 			let modelId = "";
 
