@@ -6,10 +6,6 @@
 			"destination": "public/robots.txt"
 		},
 		{
-			"source": "/",
-			"destination": "public/index.html"
-		},
-		{
 			"source": "/favicon.ico",
 			"destination": "public/favicon.ico"
 		},
