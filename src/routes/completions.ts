@@ -63,6 +63,9 @@ export async function relayLLMRequest(request: Request) {
 			if (userKey?.allowedProviders && userKey.allowedProviders.length === 0) {
 				return error(403, "No providers are allowed for this API key");
 			}
+
+			console.log(`Model ${model} not found`);
+			
 			return error(404, `Model ${model} not found`);
 		}
 
@@ -104,6 +107,8 @@ export async function relayLLMRequest(request: Request) {
 		if (attempts > 1) {
 			message = `[${attempts}/${maxAttempts}] ${message}`;
 		}
+
+		console.log(message);
 
 		try {
 			const response = await proxiedFetch(url, {
