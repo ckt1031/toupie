@@ -102,13 +102,14 @@ export async function relayLLMRequest(request: Request) {
 			headers.set("Authorization", `Bearer ${channel.apiKey.value}`);
 		}
 
-		let message = `Model: ${channel.provider.model}, Provider: ${channel.provider.name} (Key #${channel.apiKey.index})`;
+		let modelUsageMetaData = `Model: ${channel.provider.model}, Provider: ${channel.provider.name} (Key #${channel.apiKey.index})`;
 
 		if (attempts > 1) {
-			message = `[${attempts}/${maxAttempts}] ${message}`;
+			modelUsageMetaData = `[${attempts}/${maxAttempts}] ${modelUsageMetaData}`;
 		}
 
-		console.log(message);
+		// Log to console to monitor model usage
+		console.log(modelUsageMetaData);
 
 		try {
 			const response = await proxiedFetch(url, {
