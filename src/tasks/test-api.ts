@@ -120,9 +120,9 @@ async function chooseProviderWithAllOption(
 	console.log(cyan("\nAvailable Providers:"));
 	const providerList = Object.keys(config.providers);
 	providerList.forEach((providerName, index) => {
-		console.log(
-			`${index + 1}\t${config.providers[providerName].name} (${providerName})`,
-		);
+		const provider = config.providers[providerName];
+		const status = provider.enabled === false ? ` ${yellow("(disabled)")}` : "";
+		console.log(`${index + 1}\t${provider.name} (${providerName})${status}`);
 	});
 	console.log(`${providerList.length + 1}\tAll`);
 	const choice = await rl.question(yellow("Enter the option number: "));
@@ -130,7 +130,13 @@ async function chooseProviderWithAllOption(
 	const providerIndex = Number.parseInt(choice, 10) - 1;
 
 	if (providerIndex === providerList.length) {
-		return config.providers;
+		const enabledProviders: Record<string, Provider> = {};
+		for (const key in config.providers) {
+			if (config.providers[key].enabled !== false) {
+				enabledProviders[key] = config.providers[key];
+			}
+		}
+		return enabledProviders;
 	}
 
 	return {

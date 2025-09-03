@@ -10,9 +10,9 @@ export async function chooseProvider(config: APIConfig): Promise<string> {
 	console.log(cyan("\nAvailable Providers:"));
 	const providerList = Object.keys(config.providers);
 	providerList.forEach((providerName, index) => {
-		console.log(
-			`${index + 1}\t${config.providers[providerName].name} (${providerName})`,
-		);
+		const provider = config.providers[providerName];
+		const status = provider.enabled === false ? ` ${red("(disabled)")}` : "";
+		console.log(`${index + 1}	${provider.name} (${providerName})${status}`);
 	});
 	const choice = await rl.question(yellow("Enter the provider number: "));
 
@@ -175,6 +175,7 @@ export async function addProvider(config: APIConfig): Promise<APIConfig> {
 		baseURL,
 		models,
 		keys,
+		enabled: true,
 		...(isAzure ? { azure: isAzure, azureAPIVersion: azureAPIVersion } : {}),
 	};
 	return config;
@@ -271,10 +272,21 @@ export async function modifyProviderSettings(
 			)) || provider.azureAPIVersion;
 	}
 
+	const enabledInput = await rl.question(
+		`Enable this provider? (yes/no, leave empty to keep "${
+			provider.enabled !== false ? "enabled" : "disabled"
+		}"): `,
+	);
+	let enabled: boolean = provider.enabled ?? true;
+	if (enabledInput !== "") {
+		enabled = enabledInput.toLowerCase() === "yes";
+	}
+
 	config.providers[providerName] = {
 		...provider,
 		name: newName,
 		baseURL: newBaseURL,
+		enabled,
 		...(isAzure
 			? { azure: isAzure, azureAPIVersion: azureAPIVersion }
 			: { azure: false }),

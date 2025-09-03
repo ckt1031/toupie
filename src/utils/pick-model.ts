@@ -8,6 +8,7 @@ type UserKey = APIConfig["userKeys"][number];
 const modelIdToProviders: Record<string, Provider[]> = {};
 
 for (const provider of Object.values(apiConfig.providers) as Provider[]) {
+	if (provider.enabled === false) continue;
 	for (const model of provider.models) {
 		// Get the modelId
 		const modelId =

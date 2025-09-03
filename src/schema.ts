@@ -11,7 +11,7 @@ function validateAllowedProviders(data: APIConfig) {
 			for (const providerName of userKey.allowedProviders) {
 				if (!providerNames.includes(providerName)) {
 					throw new Error(
-						`Invalid provider "${providerName}" in allowedProviders for user key "${userKey.name}".Available providers: ${providerNames.join(", ")}`,
+						`Invalid provider "${providerName}" in allowedProviders for specific key`,
 					);
 				}
 			}
@@ -93,6 +93,12 @@ export const apiConfigSchema = z
 				azureAPIVersion: z.string().optional(),
 
 				testModel: z.string().optional(),
+
+				/**
+				 * Enable or disable the provider.
+				 * @default true
+				 */
+				enabled: z.boolean().optional(),
 			}),
 		),
 	})

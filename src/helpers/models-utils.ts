@@ -1,4 +1,5 @@
 import apiConfig from "../../data/api.json";
+import type { APIConfig } from "../schema";
 
 interface Model {
 	id: string;
@@ -16,7 +17,11 @@ export function listAllModels(allowedProviders?: string[]) {
 	const list: Model[] = [];
 	const modelIds = new Set<string>();
 
-	for (const [providerKey, provider] of Object.entries(apiConfig.providers)) {
+	const config = apiConfig as APIConfig;
+
+	for (const [providerKey, provider] of Object.entries(config.providers)) {
+		if (provider.enabled === false) continue;
+
 		// If allowedProviders is specified, only include providers in the allowed list
 		if (allowedProviders && !allowedProviders.includes(providerKey)) {
 			continue;
