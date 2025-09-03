@@ -5,7 +5,7 @@ import type { APIConfig } from "./schema";
 const apiKeyMap = new Map(apiConfig.userKeys.map((item) => [item.key, item]));
 
 // Extend the Request interface to include userKey
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
 	userKey?: APIConfig["userKeys"][number];
 }
 

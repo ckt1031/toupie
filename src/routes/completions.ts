@@ -1,5 +1,5 @@
 import { error } from "itty-router";
-import type { APIConfig } from "../schema";
+import type { AuthenticatedRequest } from "../auth";
 import {
 	type BodyType,
 	bodyToBodyInit,
@@ -11,12 +11,7 @@ import {
 import pickHeaders from "../utils/pick-headers";
 import { pickModelChannel } from "../utils/pick-model";
 
-// Extend the Request interface to include userKey
-interface AuthenticatedRequest extends Request {
-	userKey?: APIConfig["userKeys"][number];
-}
-
-export async function relayLLMRequest(request: Request) {
+export async function relayLLMRequest(request: AuthenticatedRequest) {
 	const contentType = request.headers.get("content-type");
 	const isBodyForm = contentType?.includes("multipart/form-data") ?? false;
 
@@ -34,15 +29,13 @@ export async function relayLLMRequest(request: Request) {
 	if (!model) return error(400, "Model is required");
 
 	// Get user key data from request object (set by handleAuth middleware)
-	const userKey = (request as AuthenticatedRequest).userKey;
+	const userKey = request.userKey;
 
 	// We can start logic with retries
 	let attempts = 0;
 
 	const failedKeys: string[] = [];
 	const maxAttempts = 3; // Maximum number of retry attempts
-
-	let lastError: Error | null = null;
 
 	const headers = pickHeaders(request.headers, [
 		"content-type",
@@ -64,8 +57,6 @@ export async function relayLLMRequest(request: Request) {
 				return error(403, "No providers are allowed for this API key");
 			}
 
-			console.log(`Model ${model} not found`);
-			
 			return error(404, `Model ${model} not found`);
 		}
 
@@ -129,15 +120,12 @@ export async function relayLLMRequest(request: Request) {
 
 			throw new Error(`Request failed with status ${response.status}`);
 		} catch (error) {
-			lastError = error as Error;
+			console.error(`Attempt ${attempts} failed:`, error);
 		}
 
 		// Add current key to failed keys
 		failedKeys.push(channel.apiKey.value);
 	}
 
-	// If we've exhausted all attempts, return the last error
-	console.error("All attempts failed:", lastError);
-
-	return error(500, "All API attempts failed. Please try again later.");
+	return error(500, "All attempts failed. Please try again later.");
 }

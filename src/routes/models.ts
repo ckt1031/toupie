@@ -17,5 +17,7 @@ export function handleModelListRequest(request: AuthenticatedRequest) {
 		data: listAllModels(allowedProviders),
 	};
 
+	console.info("Accessed model API");
+
 	return json(data);
 }
