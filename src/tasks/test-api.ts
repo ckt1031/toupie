@@ -1,7 +1,7 @@
+import { confirm, select } from "@inquirer/prompts";
 import cliProgress from "cli-progress";
 import Table from "cli-table3";
 import * as apiConfig from "../../data/api.json";
-import { cyan, rl, yellow } from "../helpers/cli-utils";
 import type { APIConfig } from "../schema";
 
 type Provider = APIConfig["providers"][string];
@@ -116,32 +116,37 @@ async function testAPIFromKey(selectedProviders: Record<string, Provider>) {
 async function chooseProviderWithAllOption(
 	config: APIConfig,
 ): Promise<Record<string, Provider>> {
-	// List providers with numbers
-	console.log(cyan("\nAvailable Providers:"));
-	const providerList = Object.keys(config.providers);
-	providerList.forEach((providerName, index) => {
-		const provider = config.providers[providerName];
-		const status = provider.enabled === false ? ` ${yellow("(disabled)")}` : "";
-		console.log(`${index + 1}\t${provider.name} (${providerName})${status}`);
+	const providerChoices = Object.entries(config.providers).map(
+		([key, provider]) => ({
+			name: `${provider.name} (${key})${
+				provider.enabled === false ? " (disabled)" : ""
+			}`,
+			value: key,
+		}),
+	);
+
+	const allChoice = await confirm({
+		message: "Test all enabled providers?",
+		default: false,
 	});
-	console.log(`${providerList.length + 1}\tAll`);
-	const choice = await rl.question(yellow("Enter the option number: "));
 
-	const providerIndex = Number.parseInt(choice, 10) - 1;
-
-	if (providerIndex === providerList.length) {
+	if (allChoice) {
 		const enabledProviders: Record<string, Provider> = {};
-		for (const key in config.providers) {
-			if (config.providers[key].enabled !== false) {
-				enabledProviders[key] = config.providers[key];
+		for (const [key, provider] of Object.entries(config.providers)) {
+			if (provider.enabled !== false) {
+				enabledProviders[key] = provider;
 			}
 		}
 		return enabledProviders;
 	}
 
+	const selectedProvider = await select({
+		message: "Select a provider to test:",
+		choices: providerChoices,
+	});
+
 	return {
-		[providerList[providerIndex]]:
-			config.providers[providerList[providerIndex]],
+		[selectedProvider]: config.providers[selectedProvider],
 	};
 }
 

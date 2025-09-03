@@ -1,5 +1,4 @@
 import * as fs from "node:fs";
-import chalk from "chalk";
 import type { APIConfig } from "../schema";
 
 export const apiConfigPath = "./data/api.json";
@@ -9,7 +8,7 @@ export async function loadApiConfig(): Promise<APIConfig> {
 		const data = await fs.promises.readFile(apiConfigPath, "utf-8");
 		return JSON.parse(data) as APIConfig;
 	} catch (error) {
-		console.error(chalk.red("Error loading api config:"), error);
+		console.error(`Error loading api config: ${error}`);
 		return { userKeys: [], providers: {} };
 	}
 }
@@ -22,6 +21,6 @@ export async function saveApiConfig(config: APIConfig): Promise<void> {
 			"utf-8",
 		);
 	} catch (error) {
-		console.error(chalk.red("Error saving api config:"), error);
+		console.error(`Error saving api config: ${error}`);
 	}
 }

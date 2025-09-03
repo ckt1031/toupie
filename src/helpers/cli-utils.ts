@@ -1,5 +1,4 @@
-import * as readline from "node:readline/promises";
-import chalk from "chalk";
+import { select } from "@inquirer/prompts";
 import { type APIConfig, apiConfigSchema } from "../schema";
 import testAPI from "../tasks/test-api";
 import { saveApiConfig } from "./api-config";
@@ -14,142 +13,106 @@ import {
 	removeProvider,
 	validateApiConfig,
 } from "./provider-utils";
+
 import {
 	addUserApiKey,
 	removeUserApiKey,
 	viewUserApiKey,
 } from "./user-key-utils";
 
-export const rl = readline.createInterface({
-	input: process.stdin,
-	output: process.stdout,
-});
-
-export const cyan = chalk.cyan;
-export const yellow = chalk.yellow;
-export const red = chalk.red;
-export const green = chalk.green;
-
 export async function displayMenu(config: APIConfig): Promise<void> {
-	console.log(chalk.cyan("\nChoose an action:"));
-
-	const actions = [
-		{
-			name: "Add User API Key",
-			action: async (config: APIConfig) => {
-				return addUserApiKey(config);
-			},
-		},
-		{
-			name: "Add Provider",
-			action: async (config: APIConfig) => {
-				return addProvider(config);
-			},
-		},
-		{
-			name: "Add Key to Existing Provider",
-			action: async (config: APIConfig) => {
-				return addKeyToExistingProvider(config);
-			},
-		},
-
-		{
-			name: "Add Model to Existing Provider",
-			action: async (config: APIConfig) => {
-				return addModelToExistingProvider(config);
-			},
-		},
-		{
-			name: "View User API Key",
-			action: async (config: APIConfig) => {
-				return viewUserApiKey(config);
-			},
-		},
-		{
-			name: "Modify Provider Settings",
-			action: async (config: APIConfig) => {
-				return modifyProviderSettings(config);
-			},
-		},
-		{
-			name: "Remove User API Key",
-			action: async (config: APIConfig) => {
-				return removeUserApiKey(config);
-			},
-		},
-		{
-			name: "Remove Provider",
-			action: async (config: APIConfig) => {
-				return removeProvider(config);
-			},
-		},
+	const actionChoices = [
+		{ name: "Add User API Key", value: "addUserKey" },
+		{ name: "Add Provider", value: "addProvider" },
+		{ name: "Add Key to Existing Provider", value: "addKeyToProvider" },
+		{ name: "Add Model to Existing Provider", value: "addModelToProvider" },
+		{ name: "View User API Key", value: "viewUserKey" },
+		{ name: "Modify Provider Settings", value: "modifyProvider" },
+		{ name: "Remove User API Key", value: "removeUserKey" },
+		{ name: "Remove Provider", value: "removeProvider" },
 		{
 			name: "Remove Key from Existing Provider",
-			action: async (config: APIConfig) => {
-				return removeKeyFromExistingProvider(config);
-			},
+			value: "removeKeyFromProvider",
 		},
 		{
 			name: "Remove Model from Existing Provider",
-			action: async (config: APIConfig) => {
-				return removeModelFromExistingProvider(config);
-			},
+			value: "removeModelFromProvider",
 		},
-		{
-			name: "Validate API Config",
-			action: async () => {
-				return validateApiConfig();
-			},
-		},
-		{
-			name: "Test API Models",
-			action: async () => {
-				return testAPI();
-			},
-		},
-		{
-			name: "List All Models",
-			action: async () => {
-				const models = listAllModels();
-				for (const model of models) {
-					console.log(model.id);
-				}
-			},
-		},
-		{
-			name: "Exit",
-			action: () => {
-				console.log(chalk.red("Exiting..."));
-				rl.close();
-				process.exit(0);
-				return;
-			},
-		},
+		{ name: "Validate API Config", value: "validateConfig" },
+		{ name: "Test API Models", value: "testAPI" },
+		{ name: "List All Models", value: "listModels" },
+		{ name: "Exit", value: "exit" },
 	];
 
-	actions.forEach((action, index) => {
-		console.log(`${index + 1}\t${action.name}`);
+	const choice = await select({
+		message: "Choose an action:",
+		choices: actionChoices,
 	});
-
-	const choice = await rl.question(chalk.yellow("Enter your choice: "));
-
-	// Print a newline for better readability
-	console.log("");
 
 	let updatedConfig: APIConfig | undefined;
 
-	const actionIndex = Number.parseInt(choice, 10) - 1;
-	if (actions[actionIndex]) {
-		const res = await actions[actionIndex].action(config);
-
-		const { success } = await apiConfigSchema.safeParseAsync(res);
-
-		if (res && success) {
-			await saveApiConfig(updatedConfig || config);
+	switch (choice) {
+		case "addUserKey":
+			updatedConfig = await addUserApiKey(config);
+			break;
+		case "addProvider":
+			updatedConfig = await addProvider(config);
+			break;
+		case "addKeyToProvider":
+			updatedConfig = await addKeyToExistingProvider(config);
+			break;
+		case "addModelToProvider":
+			updatedConfig = await addModelToExistingProvider(config);
+			break;
+		case "viewUserKey":
+			await viewUserApiKey(config);
+			break;
+		case "modifyProvider":
+			updatedConfig = await modifyProviderSettings(config);
+			break;
+		case "removeUserKey":
+			updatedConfig = await removeUserApiKey(config);
+			break;
+		case "removeProvider":
+			updatedConfig = await removeProvider(config);
+			break;
+		case "removeKeyFromProvider":
+			updatedConfig = await removeKeyFromExistingProvider(config);
+			break;
+		case "removeModelFromProvider":
+			updatedConfig = await removeModelFromExistingProvider(config);
+			break;
+		case "validateConfig":
+			await validateApiConfig();
+			break;
+		case "testAPI":
+			await testAPI();
+			break;
+		case "listModels": {
+			const models = listAllModels();
+			for (const model of models) {
+				console.log(model.id);
+			}
+			break;
 		}
-	} else {
-		console.log(chalk.red("Invalid choice. Please try again."));
+		case "exit":
+			console.log("Exiting...");
+			process.exit(0);
 	}
 
-	displayMenu(updatedConfig || config);
+	// Save config if it was updated
+	if (updatedConfig) {
+		const { success } = await apiConfigSchema.safeParseAsync(updatedConfig);
+		if (success) {
+			await saveApiConfig(updatedConfig);
+			console.log("Configuration saved successfully.");
+		}
+	}
+
+	// Continue the menu loop (unless exiting)
+	if (choice !== "exit") {
+		// Print a newline
+		console.log("");
+		await displayMenu(updatedConfig || config);
+	}
 }
