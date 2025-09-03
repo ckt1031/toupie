@@ -1,10 +1,10 @@
 {
 	"name": "toupie",
-	"version": "0.0.1",
+	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
 		"dev": "wrangler dev",
-		"helper": "bun run helper.ts",
+		"helper": "bun run scripts/helper.ts",
 		"lint": "tsc --noEmit && biome lint",
 		"lint:fix": "tsc --noEmit && biome check --write .",
 		"deploy:vercel": "vercel deploy . --prod --logs",

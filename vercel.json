@@ -6,14 +6,6 @@
 			"destination": "public/robots.txt"
 		},
 		{
-			"source": "/favicon.ico",
-			"destination": "public/favicon.ico"
-		},
-		{
-			"source": "/favicon.png",
-			"destination": "public/android-chrome-512x512.png"
-		},
-		{
 			"source": "/(.*)",
 			"destination": "api/handler"
 		}
