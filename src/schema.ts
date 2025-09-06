@@ -99,6 +99,13 @@ export const apiConfigSchema = z
 				 * @default true
 				 */
 				enabled: z.boolean().optional(),
+
+				/**
+				 * Priority for provider selection. Higher numbers have higher priority.
+				 * Providers with the same priority are randomly selected.
+				 * If not specified, defaults to 0.
+				 */
+				priority: z.number().int().optional(),
 			}),
 		),
 	})

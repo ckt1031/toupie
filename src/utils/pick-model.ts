@@ -1,3 +1,4 @@
+import { sample } from "lodash";
 import apiConfig from "../../data/api.json";
 import type { APIConfig } from "../schema";
 
@@ -19,33 +20,6 @@ for (const provider of Object.values(apiConfig.providers) as Provider[]) {
 
 		modelIdToProviders[modelId].push(provider);
 	}
-}
-
-function getRandomElement<T>(array: T[]): T {
-	if (!array || array.length === 0) {
-		throw new Error("Array is empty");
-	}
-
-	// Return the first element if the array has only one element to save time
-	if (array.length === 1) {
-		return array[0];
-	}
-
-	if (array.length > 2 ** 32 - 1) {
-		throw new RangeError("Array too large");
-	}
-
-	const maxRandomValue = 2 ** 32;
-	const randomBuffer = new Uint32Array(1);
-
-	let randomIndex: number;
-
-	do {
-		crypto.getRandomValues(randomBuffer);
-		randomIndex = Math.floor((randomBuffer[0] / maxRandomValue) * array.length);
-	} while (randomIndex >= array.length);
-
-	return array[randomIndex];
 }
 
 function getModelInfoFromProvider(
@@ -75,36 +49,52 @@ function filterProvidersByUserKey(
 	providers: Provider[],
 	userKey: UserKey,
 ): Provider[] {
-	// If allowedProviders is not specified, allow all providers
-	if (!userKey.allowedProviders) {
-		return providers;
-	}
-
-	// If allowedProviders is empty, return no providers (reject)
-	if (userKey.allowedProviders.length === 0) {
-		return [];
+	// If no allowedProviders specified, allow all providers
+	if (!userKey.allowedProviders?.length) {
+		return userKey.allowedProviders ? [] : providers;
 	}
 
 	// Filter providers to only include those in allowedProviders
 	return providers.filter((provider) => {
-		// Find the provider key in the config that matches this provider
 		const providerKey = Object.keys(apiConfig.providers).find(
 			(key) =>
 				apiConfig.providers[key as keyof typeof apiConfig.providers] ===
 				provider,
 		);
-
 		return providerKey && userKey.allowedProviders?.includes(providerKey);
 	});
 }
 
 /**
- * Randomly pick a provider for the model based on the model id and user key restrictions
+ * Sort providers by priority (higher priority first) and randomly shuffle providers with the same priority
  */
-export function pickModelChannel(
+function sortProvidersByPriority(providers: Provider[]): Provider[] {
+	return (
+		providers
+			// Sort by priority (descending) and randomize within same priority
+			.sort((a, b) => {
+				const priorityA = a.priority ?? 0;
+				const priorityB = b.priority ?? 0;
+
+				// If priorities are different, sort by priority (higher first)
+				if (priorityA !== priorityB) {
+					return priorityB - priorityA;
+				}
+
+				// If priorities are the same, randomize
+				return Math.random() - 0.5;
+			})
+	);
+}
+
+/**
+ * Shared helper function to select a provider and key for a model
+ */
+function selectProviderAndKey(
 	modelId: string,
-	excludeKeys: string[] = [],
-	userKey?: UserKey,
+	excludeKeys: string[],
+	userKey: UserKey | undefined,
+	excludeProviderName?: string,
 ) {
 	const providers = modelIdToProviders[modelId];
 
@@ -120,13 +110,44 @@ export function pickModelChannel(
 		return null;
 	}
 
-	// First, we will randomly pick a provider from the filtered list
-	const pickedProvider = getRandomElement(allowedProviders);
+	// Remove excluded provider if specified
+	const availableProviders = excludeProviderName
+		? allowedProviders.filter(
+				(provider) => provider.name !== excludeProviderName,
+			)
+		: allowedProviders;
 
-	// Random pick a key from the provider
-	const pickedKeyFromProvider = getRandomElement(
-		pickedProvider.keys.filter((key) => !excludeKeys.includes(key)),
-	);
+	// If no providers are available after filtering, return null
+	if (availableProviders.length === 0) {
+		return null;
+	}
+
+	// Sort providers by priority (higher priority first, random within same priority)
+	const sortedProviders = sortProvidersByPriority(availableProviders);
+
+	// Find the first provider that has available keys
+	let pickedProvider: Provider | null = null;
+	let availableKeys: string[] = [];
+
+	for (const provider of sortedProviders) {
+		const keys = provider.keys.filter((key) => !excludeKeys.includes(key));
+		if (keys.length > 0) {
+			pickedProvider = provider;
+			availableKeys = keys;
+			break;
+		}
+	}
+
+	// If no provider has available keys, return null
+	if (!pickedProvider) {
+		return null;
+	}
+
+	// Random pick a key from the available keys
+	const pickedKeyFromProvider = sample(availableKeys);
+	if (!pickedKeyFromProvider) {
+		return null;
+	}
 
 	// Handle model request
 	const chosenModel = getModelInfoFromProvider(pickedProvider, modelId);
@@ -148,4 +169,34 @@ export function pickModelChannel(
 					: undefined,
 		},
 	};
+}
+
+/**
+ * Pick a provider for the model based on priority and user key restrictions
+ * Higher priority providers are selected first, with random selection within the same priority level
+ */
+export function pickModelChannel(
+	modelId: string,
+	excludeKeys: string[] = [],
+	userKey?: UserKey,
+) {
+	return selectProviderAndKey(modelId, excludeKeys, userKey);
+}
+
+/**
+ * Get a fallback provider for the model, excluding the failed provider
+ * This function can be used when the primary provider fails and you need a fallback
+ */
+export function pickFallbackModelChannel(
+	modelId: string,
+	failedProviderName: string,
+	excludeKeys: string[] = [],
+	userKey?: UserKey,
+) {
+	return selectProviderAndKey(
+		modelId,
+		excludeKeys,
+		userKey,
+		failedProviderName,
+	);
 }
