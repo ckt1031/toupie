@@ -1,4 +1,4 @@
-import { sample } from "lodash";
+import { sample, shuffle } from "lodash";
 import apiConfig from "../../data/api.json";
 import type { APIConfig } from "../schema";
 
@@ -69,22 +69,32 @@ function filterProvidersByUserKey(
  * Sort providers by priority (higher priority first) and randomly shuffle providers with the same priority
  */
 function sortProvidersByPriority(providers: Provider[]): Provider[] {
-	return (
-		providers
-			// Sort by priority (descending) and randomize within same priority
-			.sort((a, b) => {
-				const priorityA = a.priority ?? 0;
-				const priorityB = b.priority ?? 0;
-
-				// If priorities are different, sort by priority (higher first)
-				if (priorityA !== priorityB) {
-					return priorityB - priorityA;
-				}
-
-				// If priorities are the same, randomize
-				return Math.random() - 0.5;
-			})
-	);
+	// Group providers by priority
+	const priorityGroups: Record<number, Provider[]> = {};
+	
+	for (const provider of providers) {
+		const priority = provider.priority ?? 0;
+		if (!priorityGroups[priority]) {
+			priorityGroups[priority] = [];
+		}
+		priorityGroups[priority].push(provider);
+	}
+	
+	// Sort priorities in descending order (higher priority first)
+	const sortedPriorities = Object.keys(priorityGroups)
+		.map(Number)
+		.sort((a, b) => b - a);
+	
+	// Shuffle providers within each priority group and combine them
+	const sortedProviders: Provider[] = [];
+	for (const priority of sortedPriorities) {
+		const providersInGroup = priorityGroups[priority];
+		// Shuffle the providers in this priority group using Lodash shuffle
+		const shuffled = shuffle([...providersInGroup]);
+		sortedProviders.push(...shuffled);
+	}
+	
+	return sortedProviders;
 }
 
 /**
@@ -184,8 +194,87 @@ export function pickModelChannel(
 }
 
 /**
+ * Pick a provider for the model, excluding failed providers and keys
+ * This function handles both provider-level and key-level fallbacks
+ */
+export function pickModelChannelWithFallback(
+	modelId: string,
+	excludeKeys: string[] = [],
+	excludeProviders: string[] = [],
+	userKey?: UserKey,
+) {
+	const providers = modelIdToProviders[modelId];
+
+	if (!providers || providers.length === 0) return null;
+
+	// Filter providers based on user key restrictions
+	const allowedProviders = userKey
+		? filterProvidersByUserKey(providers, userKey)
+		: providers;
+
+	// Remove failed providers from the list
+	const availableProviders = allowedProviders.filter(
+		(provider) => !excludeProviders.includes(provider.name),
+	);
+
+	// If no providers are available after filtering, return null
+	if (availableProviders.length === 0) {
+		return null;
+	}
+
+	// Sort remaining providers by priority (higher priority first, random within same priority)
+	const sortedProviders = sortProvidersByPriority(availableProviders);
+
+	// Find the first provider that has available keys
+	let pickedProvider: Provider | null = null;
+	let availableKeys: string[] = [];
+
+	for (const provider of sortedProviders) {
+		const keys = provider.keys.filter((key) => !excludeKeys.includes(key));
+		if (keys.length > 0) {
+			pickedProvider = provider;
+			availableKeys = keys;
+			break;
+		}
+	}
+
+	// If no provider has available keys, return null
+	if (!pickedProvider) {
+		return null;
+	}
+
+	// Random pick a key from the available keys
+	const pickedKeyFromProvider = sample(availableKeys);
+	if (!pickedKeyFromProvider) {
+		return null;
+	}
+
+	// Handle model request
+	const chosenModel = getModelInfoFromProvider(pickedProvider, modelId);
+
+	return {
+		apiKey: {
+			index: pickedProvider.keys.indexOf(pickedKeyFromProvider),
+			value: pickedKeyFromProvider,
+		},
+		provider: {
+			name: pickedProvider.name,
+			model: chosenModel.destination,
+			baseURL: pickedProvider.baseURL,
+			isAzure:
+				"azure" in pickedProvider ? (pickedProvider.azure as boolean) : false,
+			azureAPIVersion:
+				"azureAPIVersion" in pickedProvider
+					? (pickedProvider.azureAPIVersion as string)
+					: undefined,
+		},
+	};
+}
+
+/**
  * Get a fallback provider for the model, excluding the failed provider
  * This function can be used when the primary provider fails and you need a fallback
+ * @deprecated Use pickModelChannelWithFallback instead
  */
 export function pickFallbackModelChannel(
 	modelId: string,
