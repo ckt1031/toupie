@@ -49,7 +49,12 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 	while (attempts < maxAttempts) {
 		attempts++;
 
-		const channel = pickModelChannelWithFallback(model, failedKeys, failedProviders, userKey);
+		const channel = pickModelChannelWithFallback(
+			model,
+			failedKeys,
+			failedProviders,
+			userKey,
+		);
 
 		// If we don't have a channel, we will return an error, because this is unexpected
 		if (!channel) {
@@ -117,7 +122,7 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 			// If we get a 429 (rate limit) or 401/403 (auth error), mark this attempt as failed
 			if ([401, 403, 429, 400, 400, 500].includes(response.status)) {
 				failedKeys.push(channel.apiKey.value);
-				
+
 				// For certain errors, also mark the provider as failed to move to next provider
 				if ([401, 403, 500].includes(response.status)) {
 					failedProviders.push(channel.provider.name);
@@ -127,7 +132,7 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 			throw new Error(`Request failed with status ${response.status}`);
 		} catch (error) {
 			console.error(`Attempt ${attempts} failed:`, error);
-			
+
 			// For network errors or other failures, mark the provider as failed
 			failedProviders.push(channel.provider.name);
 		}

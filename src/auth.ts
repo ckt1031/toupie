@@ -18,6 +18,11 @@ export function handleAuth(request: Request) {
 
 	if (!authorization) return error(401, "Missing key");
 
+	// Check if Bearer token is present
+	if (!authorization.startsWith("Bearer ")) {
+		return error(401, "Invalid authorization format");
+	}
+
 	const keyData = apiKeyMap.get(authorization.replace("Bearer ", ""));
 
 	if (!keyData) return error(401, "Invalid key");

@@ -71,7 +71,7 @@ function filterProvidersByUserKey(
 function sortProvidersByPriority(providers: Provider[]): Provider[] {
 	// Group providers by priority
 	const priorityGroups: Record<number, Provider[]> = {};
-	
+
 	for (const provider of providers) {
 		const priority = provider.priority ?? 0;
 		if (!priorityGroups[priority]) {
@@ -79,12 +79,12 @@ function sortProvidersByPriority(providers: Provider[]): Provider[] {
 		}
 		priorityGroups[priority].push(provider);
 	}
-	
+
 	// Sort priorities in descending order (higher priority first)
 	const sortedPriorities = Object.keys(priorityGroups)
 		.map(Number)
 		.sort((a, b) => b - a);
-	
+
 	// Shuffle providers within each priority group and combine them
 	const sortedProviders: Provider[] = [];
 	for (const priority of sortedPriorities) {
@@ -93,7 +93,7 @@ function sortProvidersByPriority(providers: Provider[]): Provider[] {
 		const shuffled = shuffle([...providersInGroup]);
 		sortedProviders.push(...shuffled);
 	}
-	
+
 	return sortedProviders;
 }
 
