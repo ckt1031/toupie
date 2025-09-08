@@ -69,3 +69,22 @@ export async function viewUserApiKey(config: APIConfig): Promise<void> {
 		console.error(`API key "${name}" not found.`);
 	}
 }
+
+export async function rotateUserApiKey(config: APIConfig): Promise<APIConfig> {
+	const name = await selectUserApiKey(config);
+	const userKey = config.userKeys.find((key) => key.name === name);
+
+	if (userKey) {
+		const confirmed = await confirmAction(`Rotate API key "${name}"?`);
+		if (!confirmed) {
+			console.log("Rotation cancelled.");
+			return config;
+		}
+
+		userKey.key = `sk-${generateKey()}`;
+		console.log(`New API key for "${name}": ${userKey.key}`);
+	} else {
+		console.error(`API key "${name}" not found.`);
+	}
+	return config;
+}

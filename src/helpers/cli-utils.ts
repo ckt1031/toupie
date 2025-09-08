@@ -17,6 +17,7 @@ import {
 import {
 	addUserApiKey,
 	removeUserApiKey,
+	rotateUserApiKey,
 	viewUserApiKey,
 } from "./user-key-utils";
 
@@ -27,6 +28,7 @@ export async function displayMenu(config: APIConfig): Promise<void> {
 		{ name: "Add Key to Existing Provider", value: "addKeyToProvider" },
 		{ name: "Add Model to Existing Provider", value: "addModelToProvider" },
 		{ name: "View User API Key", value: "viewUserKey" },
+		{ name: "Rotate User API Key", value: "rotateUserKey" },
 		{ name: "Modify Provider Settings", value: "modifyProvider" },
 		{ name: "Remove User API Key", value: "removeUserKey" },
 		{ name: "Remove Provider", value: "removeProvider" },
@@ -66,6 +68,9 @@ export async function displayMenu(config: APIConfig): Promise<void> {
 			break;
 		case "viewUserKey":
 			await viewUserApiKey(config);
+			break;
+		case "rotateUserKey":
+			updatedConfig = await rotateUserApiKey(config);
 			break;
 		case "modifyProvider":
 			updatedConfig = await modifyProviderSettings(config);
