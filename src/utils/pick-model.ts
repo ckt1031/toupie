@@ -43,26 +43,45 @@ function getModelInfoFromProvider(
 }
 
 /**
- * Filter providers based on user key's allowedProviders
+ * Filter providers based on user key's allowedProviders and allowedModels
  */
 function filterProvidersByUserKey(
 	providers: Provider[],
 	userKey: UserKey,
+	requestedModelId?: string,
 ): Provider[] {
-	// If no allowedProviders specified, allow all providers
-	if (!userKey.allowedProviders?.length) {
-		return userKey.allowedProviders ? [] : providers;
+	// If allowedProviders is defined but empty, block all
+	if (userKey.allowedProviders && userKey.allowedProviders.length === 0) {
+		return [];
 	}
 
-	// Filter providers to only include those in allowedProviders
-	return providers.filter((provider) => {
-		const providerKey = Object.keys(apiConfig.providers).find(
-			(key) =>
-				apiConfig.providers[key as keyof typeof apiConfig.providers] ===
-				provider,
-		);
-		return providerKey && userKey.allowedProviders?.includes(providerKey);
-	});
+	// Start from provider filter if specified
+	let filtered = providers;
+
+	if (userKey.allowedProviders && userKey.allowedProviders.length > 0) {
+		filtered = filtered.filter((provider) => {
+			const providerKey = Object.keys(apiConfig.providers).find(
+				(key) =>
+					apiConfig.providers[key as keyof typeof apiConfig.providers] ===
+					provider,
+			);
+			return !!providerKey && userKey.allowedProviders?.includes(providerKey);
+		});
+	}
+
+	// If allowedModels is defined:
+	// - If empty array, block all
+	// - If provided, ensure the requestedModelId is in the allowlist
+	if (userKey.allowedModels) {
+		if (userKey.allowedModels.length === 0) {
+			return [];
+		}
+		if (requestedModelId && !userKey.allowedModels.includes(requestedModelId)) {
+			return [];
+		}
+	}
+
+	return filtered;
 }
 
 /**
@@ -112,7 +131,7 @@ function selectProviderAndKey(
 
 	// Filter providers based on user key restrictions
 	const allowedProviders = userKey
-		? filterProvidersByUserKey(providers, userKey)
+		? filterProvidersByUserKey(providers, userKey, modelId)
 		: providers;
 
 	// If no providers are allowed after filtering, return null
@@ -209,7 +228,7 @@ export function pickModelChannelWithFallback(
 
 	// Filter providers based on user key restrictions
 	const allowedProviders = userKey
-		? filterProvidersByUserKey(providers, userKey)
+		? filterProvidersByUserKey(providers, userKey, modelId)
 		: providers;
 
 	// Remove failed providers from the list

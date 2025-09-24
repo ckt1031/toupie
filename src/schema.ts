@@ -22,6 +22,38 @@ function validateAllowedProviders(data: APIConfig) {
 }
 
 /**
+ * Validates that all allowedModels entries reference existing models
+ */
+function validateAllowedModels(data: APIConfig) {
+	// Build a set of all available model IDs across all providers
+	const modelIds = new Set<string>();
+
+	for (const provider of Object.values(data.providers)) {
+		for (const model of provider.models) {
+			if (typeof model === "string") {
+				modelIds.add(model);
+			} else {
+				modelIds.add(model.request ?? model.destination);
+			}
+		}
+	}
+
+	for (const userKey of data.userKeys) {
+		if (userKey.allowedModels) {
+			for (const modelId of userKey.allowedModels) {
+				if (!modelIds.has(modelId)) {
+					throw new Error(
+						`Invalid model "${modelId}" in allowedModels for specific key`,
+					);
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
+/**
  * Check duplicate provider names
  */
 function validateDuplicateProviderKey(data: APIConfig) {
@@ -56,6 +88,11 @@ export const apiConfigSchema = z
 				 * If provided, only these providers can be used with this key.
 				 */
 				allowedProviders: z.array(z.string()).optional(),
+				/**
+				 * List of allowed model IDs. If empty array, no models are allowed.
+				 * If not provided, all models are allowed.
+				 */
+				allowedModels: z.array(z.string()).optional(),
 			}),
 		),
 		providers: z.record(
@@ -112,6 +149,7 @@ export const apiConfigSchema = z
 	.refine(
 		(data) => {
 			validateAllowedProviders(data);
+			validateAllowedModels(data);
 			validateDuplicateProviderKey(data);
 			return true;
 		},

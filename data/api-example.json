@@ -4,6 +4,7 @@
 		{
 			"name": "Test",
 			"allowedProviders": ["openrouter"],
+			"allowedModels": ["gpt-4o-mini", "openai/gpt-4o"],
 			"key": "sk-123456"
 		}
 	],

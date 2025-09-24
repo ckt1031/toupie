@@ -31,6 +31,16 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 	// Get user key data from request object (set by handleAuth middleware)
 	const userKey = request.userKey;
 
+	// Check model allowlist for this user key, if present
+	if (userKey?.allowedModels) {
+		if (userKey.allowedModels.length === 0) {
+			return error(403, "No models are allowed for this API key");
+		}
+		if (!userKey.allowedModels.includes(model)) {
+			return error(403, `Model ${model} is not allowed for this API key`);
+		}
+	}
+
 	// We can start logic with retries
 	let attempts = 0;
 

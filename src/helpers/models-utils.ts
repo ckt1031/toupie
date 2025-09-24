@@ -13,7 +13,10 @@ interface ModelConfig {
 	destination: string;
 }
 
-export function listAllModels(allowedProviders?: string[]) {
+export function listAllModels(
+	allowedProviders?: string[],
+	allowedModels?: string[],
+) {
 	const list: Model[] = [];
 	const modelIds = new Set<string>();
 
@@ -35,6 +38,11 @@ export function listAllModels(allowedProviders?: string[]) {
 			} else {
 				modelId =
 					(model as ModelConfig).request || (model as ModelConfig).destination;
+			}
+
+			// If allowedModels is specified, only include models in the allowed list
+			if (allowedModels && !allowedModels.includes(modelId)) {
+				continue;
 			}
 
 			if (modelIds.has(modelId)) continue;

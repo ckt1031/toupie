@@ -24,11 +24,17 @@ export async function addUserApiKey(config: APIConfig): Promise<APIConfig> {
 		"Enter allowed provider names (comma-separated, leave empty for all providers)",
 	);
 
+	// Ask for allowed models
+	const allowedModels = await promptCommaSeparated(
+		"Enter allowed model IDs (comma-separated, leave empty for all models)",
+	);
+
 	config.userKeys.push({
 		name,
 		key,
 		allowedProviders:
 			allowedProviders.length > 0 ? allowedProviders : undefined,
+		allowedModels: allowedModels.length > 0 ? allowedModels : undefined,
 	});
 
 	console.log(`Generated API key: ${key}`);
@@ -36,6 +42,11 @@ export async function addUserApiKey(config: APIConfig): Promise<APIConfig> {
 		console.log(`Allowed providers: ${allowedProviders.join(", ")}`);
 	} else {
 		console.log("All providers are allowed");
+	}
+	if (allowedModels.length > 0) {
+		console.log(`Allowed models: ${allowedModels.join(", ")}`);
+	} else {
+		console.log("All models are allowed");
 	}
 	return config;
 }

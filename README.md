@@ -64,6 +64,9 @@ The file is located in `./data/api.json`, make sure to create it if it doesn't e
             "allowedProviders": [ // Optional, if not provided, all providers are allowed
                 "google-genai" // Only allow Google GenAI provider
             ],
+            "allowedModels": [ // Optional, if not provided, all models are allowed
+                "gpt-4o-mini", "gemini-1.5-flash-latest"
+            ]
         }
     ],
     "providers": {

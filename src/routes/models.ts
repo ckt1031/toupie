@@ -11,10 +11,11 @@ export function handleModelListRequest(request: AuthenticatedRequest) {
 	// Extract allowed providers from authenticated user key
 	const userKey = request.userKey;
 	const allowedProviders = userKey?.allowedProviders;
+	const allowedModels = userKey?.allowedModels;
 
 	const data = {
 		object: "list",
-		data: listAllModels(allowedProviders),
+		data: listAllModels(allowedProviders, allowedModels),
 	};
 
 	console.info("Accessed model API");
