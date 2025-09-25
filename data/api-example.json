@@ -1,5 +1,13 @@
 {
 	"$schema": "./schema.json",
+	"dashboard": {
+		"oauth2": {
+			"issuer": "https://accounts.google.com",
+			"clientId": "1234567890",
+			"clientSecret": "1234567890",
+			"authSecret": "openssl rand -hex 32"
+		}
+	},
 	"userKeys": [
 		{
 			"name": "Test",

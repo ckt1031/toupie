@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
+import dashboard from "./routes/dashboard";
 import { handleProxy, proxyList } from "./routes/proxy";
 import v1 from "./routes/v1";
 
@@ -14,6 +15,9 @@ app.use(secureHeaders());
 
 // Health check
 app.get("/health", (c) => c.json({ message: "OK" }));
+
+// Dashboard routes
+app.route("/dashboard", dashboard);
 
 // Proxy routes
 for (const proxy of proxyList) {

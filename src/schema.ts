@@ -45,6 +45,20 @@ export const apiConfigSchema = z
 		 */
 		$schema: z.optional(z.string()),
 		/**
+		 * Dashboard OAuth2 configuration
+		 */
+		dashboard: z.optional(
+			z.object({
+				oauth2: z.object({
+					issuer: z.string(),
+					clientId: z.string(),
+					clientSecret: z.string(),
+					authSecret: z.string(),
+					allowedEmails: z.array(z.string()),
+				}),
+			}),
+		),
+		/**
 		 * Keys received from this project API server
 		 */
 		userKeys: z.array(
