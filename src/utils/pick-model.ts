@@ -5,7 +5,8 @@ import type { APIConfig } from "../schema";
 type Provider = APIConfig["providers"][string];
 type UserKey = APIConfig["userKeys"][number];
 
-// Create a map of modelId to providers
+// Build a lookup table from a request model ID to all providers that support it.
+// This is computed once at module load for quick routing during requests.
 const modelIdToProviders: Record<string, Provider[]> = {};
 
 for (const provider of Object.values(apiConfig.providers) as Provider[]) {
@@ -22,6 +23,9 @@ for (const provider of Object.values(apiConfig.providers) as Provider[]) {
 	}
 }
 
+// Resolve how a provider expects to receive a model given a requested model ID.
+// Returns the canonical request ID (what our API accepts) and destination
+// (what the provider needs), handling both string and object model entries.
 function getModelInfoFromProvider(
 	provider: Provider,
 	modelId: string,
@@ -43,7 +47,10 @@ function getModelInfoFromProvider(
 }
 
 /**
- * Filter providers based on user key's allowedProviders and allowedModels
+ * Filter providers using the user key's allowlists.
+ *
+ * - allowedProviders: if present and empty -> block all; if present and non-empty -> only those providers
+ * - allowedModels: if present and empty -> block all; if present and non-empty -> requested model must be included
  */
 function filterProvidersByUserKey(
 	providers: Provider[],
@@ -87,6 +94,8 @@ function filterProvidersByUserKey(
 /**
  * Sort providers by priority (higher priority first) and randomly shuffle providers with the same priority
  */
+// Sort providers by numeric priority (desc). Providers with identical priority
+// are shuffled to distribute load in a simple, fair way.
 function sortProvidersByPriority(providers: Provider[]): Provider[] {
 	// Group providers by priority
 	const priorityGroups: Record<number, Provider[]> = {};
@@ -117,7 +126,9 @@ function sortProvidersByPriority(providers: Provider[]): Provider[] {
 }
 
 /**
- * Shared helper function to select a provider and key for a model
+ * Pick a viable provider and one of its keys for the requested model,
+ * honoring user key allowlists, excluding failed keys/providers when provided,
+ * and preferring higher priority providers.
  */
 function selectProviderAndKey(
 	modelId: string,
@@ -178,7 +189,7 @@ function selectProviderAndKey(
 		return null;
 	}
 
-	// Handle model request
+	// Handle model request mapping (request -> provider destination)
 	const chosenModel = getModelInfoFromProvider(pickedProvider, modelId);
 
 	return {
@@ -201,8 +212,7 @@ function selectProviderAndKey(
 }
 
 /**
- * Pick a provider for the model based on priority and user key restrictions
- * Higher priority providers are selected first, with random selection within the same priority level
+ * Primary selection without explicit fallback lists. Honors allowlists and priorities.
  */
 export function pickModelChannel(
 	modelId: string,
@@ -213,8 +223,8 @@ export function pickModelChannel(
 }
 
 /**
- * Pick a provider for the model, excluding failed providers and keys
- * This function handles both provider-level and key-level fallbacks
+ * Selection with fallback: skips previously failed providers and keys while
+ * still applying allowlists and priorities.
  */
 export function pickModelChannelWithFallback(
 	modelId: string,

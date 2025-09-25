@@ -13,6 +13,8 @@ interface ModelConfig {
 	destination: string;
 }
 
+// Produce an OpenAI-compatible list of models, optionally filtered by
+// provider and/or model allowlists from a user key.
 export function listAllModels(
 	allowedProviders?: string[],
 	allowedModels?: string[],

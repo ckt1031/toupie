@@ -15,7 +15,7 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 	const contentType = request.headers.get("content-type");
 	const isBodyForm = contentType?.includes("multipart/form-data") ?? false;
 
-	// Only /v1/audio/* can be form data
+	// Only /v1/audio/* endpoints accept multipart form data to align with OpenAI API semantics
 	if (isBodyForm && !request.url.includes("/v1/audio/")) {
 		return error(400, "Form data is not allowed for this endpoint");
 	}
@@ -25,13 +25,13 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 		: await request.json();
 	const model: string | undefined = await getValueFromBody(body, "model");
 
-	// Model is required
+	// Model is required in OpenAI-compatible APIs
 	if (!model) return error(400, "Model is required");
 
 	// Get user key data from request object (set by handleAuth middleware)
 	const userKey = request.userKey;
 
-	// Check model allowlist for this user key, if present
+	// Enforce model allowlist on the user key, if configured
 	if (userKey?.allowedModels) {
 		if (userKey.allowedModels.length === 0) {
 			return error(403, "No models are allowed for this API key");
@@ -41,7 +41,7 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 		}
 	}
 
-	// We can start logic with retries
+	// Retry loop: attempt across multiple provider keys/providers when failures occur
 	let attempts = 0;
 
 	const failedKeys: string[] = [];
@@ -66,9 +66,9 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 			userKey,
 		);
 
-		// If we don't have a channel, we will return an error, because this is unexpected
+		// No available channel after filtering/selection
 		if (!channel) {
-			// Check if it's because no providers are allowed for this user key
+			// Explicitly handle "no providers allowed" case for clarity
 			if (userKey?.allowedProviders && userKey.allowedProviders.length === 0) {
 				return error(403, "No providers are allowed for this API key");
 			}
@@ -91,7 +91,7 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 
 		let url: string;
 
-		// Handle Azure provider
+		// Construct URL and headers per provider type (Azure vs. standard OpenAI-compatible)
 		if (channel.provider.isAzure) {
 			url = request.url.replace(
 				`${originalServerOrigin}/v1`,
