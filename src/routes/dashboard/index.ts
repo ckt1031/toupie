@@ -1,6 +1,7 @@
 import {
 	getAuth,
 	initOidcAuthMiddleware,
+	type OidcAuth,
 	type OidcAuthEnv,
 	oidcAuthMiddleware,
 	processOAuthCallback,
@@ -11,7 +12,13 @@ import apiConfig from "../../../data/api.json";
 import home from "./Home";
 import userKeys from "./UserKeys";
 
-const app = new Hono();
+export type DashboardEnv = {
+	Variables: {
+		auth: OidcAuth
+	};
+};
+
+const app = new Hono<DashboardEnv>();
 
 // We don't need to worry about "apiConfig.dashboard" issue
 // Since without apiConfig.dashboard this app router will not be loaded
@@ -38,9 +45,12 @@ app.use(oidcAuthMiddleware());
 
 app.use(async (c, next) => {
 	const auth = await getAuth(c);
+
 	if (!auth || !auth.email) {
 		return c.redirect("/dashboard/login");
 	}
+
+	c.set("auth", auth);
 
 	// Check if the email is allowed
 	if (

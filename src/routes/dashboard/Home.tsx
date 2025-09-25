@@ -1,8 +1,8 @@
-import { getAuth } from "@hono/oidc-auth";
 import { Hono } from "hono";
 import { FC } from "hono/jsx";
+import type { DashboardEnv } from "./index";
 
-const app = new Hono();
+const app = new Hono<DashboardEnv>();
 
 const BigTitle: FC<{ email: string }> = ({ email }) => {
     return (
@@ -25,11 +25,11 @@ const BigTitle: FC<{ email: string }> = ({ email }) => {
     )
 }
 
-app.get('/', async (c) => {
-    const auth = await getAuth(c)
+app.get('/', (c) => {
+    const auth = c.get("auth");
 
-    if (!auth || !auth.email) {
-        return c.redirect("/dashboard/login")
+    if (!auth.email) {
+        return c.text("You are not logged in", 401);
     }
 
     return c.html(<BigTitle email={auth.email.toString()} />)

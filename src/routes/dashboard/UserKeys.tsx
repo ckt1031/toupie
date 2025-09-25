@@ -1,4 +1,3 @@
-import { getAuth } from "@hono/oidc-auth";
 import { Hono } from "hono";
 import { FC } from "hono/jsx";
 import apiConfig from "../../../data/api.json";
@@ -93,13 +92,7 @@ const UserKeysList: FC<{ userKeys: UserKey[] }> = ({ userKeys }) => {
     );
 };
 
-app.get("/", async (c) => {
-    const auth = await getAuth(c);
-
-    if (!auth || !auth.email) {
-        return c.redirect("/dashboard/login");
-    }
-
+app.get("/", (c) => {
     return c.html(<UserKeysList userKeys={apiConfig.userKeys} />);
 });
 
