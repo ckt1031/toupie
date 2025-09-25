@@ -54,8 +54,7 @@ function getModelInfoFromProvider(
  */
 function filterProvidersByUserKey(
 	providers: Provider[],
-	userKey: UserKey,
-	requestedModelId?: string,
+	userKey: UserKey
 ): Provider[] {
 	// If allowedProviders is defined but empty, block all
 	if (userKey.allowedProviders && userKey.allowedProviders.length === 0) {
@@ -74,18 +73,6 @@ function filterProvidersByUserKey(
 			);
 			return !!providerKey && userKey.allowedProviders?.includes(providerKey);
 		});
-	}
-
-	// If allowedModels is defined:
-	// - If empty array, block all
-	// - If provided, ensure the requestedModelId is in the allowlist
-	if (userKey.allowedModels) {
-		if (userKey.allowedModels.length === 0) {
-			return [];
-		}
-		if (requestedModelId && !userKey.allowedModels.includes(requestedModelId)) {
-			return [];
-		}
 	}
 
 	return filtered;
@@ -126,120 +113,21 @@ function sortProvidersByPriority(providers: Provider[]): Provider[] {
 }
 
 /**
- * Pick a viable provider and one of its keys for the requested model,
- * honoring user key allowlists, excluding failed keys/providers when provided,
- * and preferring higher priority providers.
- */
-function selectProviderAndKey(
-	modelId: string,
-	excludeKeys: string[],
-	userKey: UserKey | undefined,
-	excludeProviderName?: string,
-) {
-	const providers = modelIdToProviders[modelId];
-
-	if (!providers || providers.length === 0) return null;
-
-	// Filter providers based on user key restrictions
-	const allowedProviders = userKey
-		? filterProvidersByUserKey(providers, userKey, modelId)
-		: providers;
-
-	// If no providers are allowed after filtering, return null
-	if (allowedProviders.length === 0) {
-		return null;
-	}
-
-	// Remove excluded provider if specified
-	const availableProviders = excludeProviderName
-		? allowedProviders.filter(
-				(provider) => provider.name !== excludeProviderName,
-			)
-		: allowedProviders;
-
-	// If no providers are available after filtering, return null
-	if (availableProviders.length === 0) {
-		return null;
-	}
-
-	// Sort providers by priority (higher priority first, random within same priority)
-	const sortedProviders = sortProvidersByPriority(availableProviders);
-
-	// Find the first provider that has available keys
-	let pickedProvider: Provider | null = null;
-	let availableKeys: string[] = [];
-
-	for (const provider of sortedProviders) {
-		const keys = provider.keys.filter((key) => !excludeKeys.includes(key));
-		if (keys.length > 0) {
-			pickedProvider = provider;
-			availableKeys = keys;
-			break;
-		}
-	}
-
-	// If no provider has available keys, return null
-	if (!pickedProvider) {
-		return null;
-	}
-
-	// Random pick a key from the available keys
-	const pickedKeyFromProvider = sample(availableKeys);
-	if (!pickedKeyFromProvider) {
-		return null;
-	}
-
-	// Handle model request mapping (request -> provider destination)
-	const chosenModel = getModelInfoFromProvider(pickedProvider, modelId);
-
-	return {
-		apiKey: {
-			index: pickedProvider.keys.indexOf(pickedKeyFromProvider),
-			value: pickedKeyFromProvider,
-		},
-		provider: {
-			name: pickedProvider.name,
-			model: chosenModel.destination,
-			baseURL: pickedProvider.baseURL,
-			isAzure:
-				"azure" in pickedProvider ? (pickedProvider.azure as boolean) : false,
-			azureAPIVersion:
-				"azureAPIVersion" in pickedProvider
-					? (pickedProvider.azureAPIVersion as string)
-					: undefined,
-		},
-	};
-}
-
-/**
- * Primary selection without explicit fallback lists. Honors allowlists and priorities.
- */
-export function pickModelChannel(
-	modelId: string,
-	excludeKeys: string[] = [],
-	userKey?: UserKey,
-) {
-	return selectProviderAndKey(modelId, excludeKeys, userKey);
-}
-
-/**
  * Selection with fallback: skips previously failed providers and keys while
  * still applying allowlists and priorities.
  */
 export function pickModelChannelWithFallback(
 	modelId: string,
+	userKey: UserKey,
 	excludeKeys: string[] = [],
 	excludeProviders: string[] = [],
-	userKey?: UserKey,
 ) {
 	const providers = modelIdToProviders[modelId];
 
 	if (!providers || providers.length === 0) return null;
 
 	// Filter providers based on user key restrictions
-	const allowedProviders = userKey
-		? filterProvidersByUserKey(providers, userKey, modelId)
-		: providers;
+	const allowedProviders = filterProvidersByUserKey(providers, userKey);
 
 	// Remove failed providers from the list
 	const availableProviders = allowedProviders.filter(
@@ -298,23 +186,4 @@ export function pickModelChannelWithFallback(
 					: undefined,
 		},
 	};
-}
-
-/**
- * Get a fallback provider for the model, excluding the failed provider
- * This function can be used when the primary provider fails and you need a fallback
- * @deprecated Use pickModelChannelWithFallback instead
- */
-export function pickFallbackModelChannel(
-	modelId: string,
-	failedProviderName: string,
-	excludeKeys: string[] = [],
-	userKey?: UserKey,
-) {
-	return selectProviderAndKey(
-		modelId,
-		excludeKeys,
-		userKey,
-		failedProviderName,
-	);
 }

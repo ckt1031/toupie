@@ -26,13 +26,15 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 	const model: string | undefined = await getValueFromBody(body, "model");
 
 	// Model is required in OpenAI-compatible APIs
-	if (!model) return error(400, "Model is required");
+	if (!model || !model.trim()) return error(400, "Model is required");
 
 	// Get user key data from request object (set by handleAuth middleware)
 	const userKey = request.userKey;
 
+	if (!userKey) return error(401, "Unauthorized");
+
 	// Enforce model allowlist on the user key, if configured
-	if (userKey?.allowedModels) {
+	if (userKey.allowedModels) {
 		if (userKey.allowedModels.length === 0) {
 			return error(403, "No models are allowed for this API key");
 		}
@@ -61,9 +63,9 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 
 		const channel = pickModelChannelWithFallback(
 			model,
+			userKey,
 			failedKeys,
 			failedProviders,
-			userKey,
 		);
 
 		// No available channel after filtering/selection
