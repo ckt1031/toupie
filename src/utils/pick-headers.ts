@@ -1,5 +1,5 @@
 const pickHeaders = (
-	headers: Headers,
+	headers: Record<string, string>,
 	keys: (string | RegExp | undefined)[],
 ): Headers => {
 	const picked = new Headers();
@@ -16,9 +16,9 @@ const pickHeaders = (
 		}
 	}
 
-	for (const key of headers.keys()) {
+	for (const key of Object.keys(headers)) {
 		if (stringKeys.has(key) || regexKeys.some((regex) => regex.test(key))) {
-			const value = headers.get(key);
+			const value = headers[key];
 			if (typeof value === "string") {
 				picked.set(key, value);
 			}

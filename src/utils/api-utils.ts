@@ -1,5 +1,3 @@
-import { error } from "itty-router";
-
 export type BodyType = FormData | Record<string, string>;
 
 export async function getValueFromBody(body: BodyType, key: string) {
@@ -46,6 +44,24 @@ export function bodyToBodyInit(body: BodyType): BodyInit {
 	return JSON.stringify(body);
 }
 
+// Clean up headers before reaching to client (response)
+export function purgeHeaders(headers: Headers): Headers {
+	// Clone the headers
+	const clonedHeaders = new Headers(headers);
+
+	// Delete server header
+	clonedHeaders.delete("server");
+
+	// Clean up x-* headers
+	for (const key of clonedHeaders.keys()) {
+		if (key.startsWith("x-")) {
+			clonedHeaders.delete(key);
+		}
+	}
+
+	return clonedHeaders;
+}
+
 export async function proxiedFetch(
 	input: RequestInfo,
 	init: RequestInit,
@@ -62,7 +78,7 @@ export async function proxiedFetch(
 		return new Response(response.body, {
 			status: response.status,
 			statusText: response.statusText,
-			headers: response.headers,
+			headers: purgeHeaders(response.headers),
 		});
 	} catch (err) {
 		const isErrorValid = err instanceof Error;
@@ -82,7 +98,12 @@ export async function proxiedFetch(
 					// Log the JSON data
 					console.error("Response:", json);
 
-					return error(response.status, { cause: json });
+					throw new Error(
+						`Proxy request failed with status ${response.status}`,
+						{
+							cause: json,
+						},
+					);
 				}
 
 				const text = await response.text();
@@ -90,20 +111,26 @@ export async function proxiedFetch(
 				// Log the text data
 				console.error("Response:", text);
 
-				return error(response.status, { cause: text });
+				throw new Error(`Proxy request failed with status ${response.status}`, {
+					cause: text,
+				});
 			}
 
 			// Log the error
 			console.error(err.message);
 
 			// If cause is not a Response, return the error message
-			return error(500, err.message);
+			throw new Error(`Proxy request failed`, {
+				cause: err.message,
+			});
 		}
 
 		// Log the error
 		console.error(err);
 
 		// If error is not an instance of Error, return generic error
-		return error(500, "Internal Server Error");
+		throw new Error(`Proxy request failed with unknown error`, {
+			cause: "Internal Server Error",
+		});
 	}
 }

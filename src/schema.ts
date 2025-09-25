@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/mini";
 
 /**
  * Validates that all allowedProviders entries reference existing providers
@@ -12,38 +12,6 @@ function validateAllowedProviders(data: APIConfig) {
 				if (!providerNames.includes(providerName)) {
 					throw new Error(
 						`Invalid provider "${providerName}" in allowedProviders for specific key`,
-					);
-				}
-			}
-		}
-	}
-
-	return true;
-}
-
-/**
- * Validates that all allowedModels entries reference existing models
- */
-function validateAllowedModels(data: APIConfig) {
-	// Build a set of all available model IDs across all providers
-	const modelIds = new Set<string>();
-
-	for (const provider of Object.values(data.providers)) {
-		for (const model of provider.models) {
-			if (typeof model === "string") {
-				modelIds.add(model);
-			} else {
-				modelIds.add(model.request ?? model.destination);
-			}
-		}
-	}
-
-	for (const userKey of data.userKeys) {
-		if (userKey.allowedModels) {
-			for (const modelId of userKey.allowedModels) {
-				if (!modelIds.has(modelId)) {
-					throw new Error(
-						`Invalid model "${modelId}" in allowedModels for specific key`,
 					);
 				}
 			}
@@ -75,7 +43,7 @@ export const apiConfigSchema = z
 		/**
 		 * JSON Schema reference
 		 */
-		$schema: z.string().optional(),
+		$schema: z.optional(z.string()),
 		/**
 		 * Keys received from this project API server
 		 */
@@ -87,12 +55,12 @@ export const apiConfigSchema = z
 				 * List of allowed provider names. If empty or not provided, all providers are allowed.
 				 * If provided, only these providers can be used with this key.
 				 */
-				allowedProviders: z.array(z.string()).optional(),
+				allowedProviders: z.optional(z.array(z.string())),
 				/**
 				 * List of allowed model IDs. If empty array, no models are allowed.
 				 * If not provided, all models are allowed.
 				 */
-				allowedModels: z.array(z.string()).optional(),
+				allowedModels: z.optional(z.array(z.string())),
 			}),
 		),
 		providers: z.record(
@@ -123,39 +91,40 @@ export const apiConfigSchema = z
 				/**
 				 * Is Microsoft Azure API
 				 */
-				azure: z.boolean().optional(),
+				azure: z.optional(z.boolean()),
 				/**
 				 * This is required if API is Azure mode
 				 */
-				azureAPIVersion: z.string().optional(),
+				azureAPIVersion: z.optional(z.string()),
 
-				testModel: z.string().optional(),
+				testModel: z.optional(z.string()),
 
 				/**
 				 * Enable or disable the provider.
 				 * @default true
 				 */
-				enabled: z.boolean().optional(),
+				enabled: z.optional(z.boolean()),
 
 				/**
 				 * Priority for provider selection. Higher numbers have higher priority.
 				 * Providers with the same priority are randomly selected.
 				 * If not specified, defaults to 0.
 				 */
-				priority: z.number().int().optional(),
+				priority: z.optional(z.number()),
 			}),
 		),
 	})
-	.refine(
-		(data) => {
-			validateAllowedProviders(data);
-			validateAllowedModels(data);
-			validateDuplicateProviderKey(data);
-			return true;
-		},
-		{
-			message: "Invalid API config",
-		},
+	.check(
+		z.refine(
+			(data) => {
+				validateAllowedProviders(data);
+				validateDuplicateProviderKey(data);
+				return true;
+			},
+			{
+				message: "Invalid API config",
+			},
+		),
 	);
 
 export type APIConfig = z.infer<typeof apiConfigSchema>;

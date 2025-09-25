@@ -1,43 +1,27 @@
-import { AutoRouter, cors, json } from "itty-router";
-import { handleAuth } from "./auth";
-import { relayLLMRequest } from "./routes/completions";
-import { handleModelListRequest } from "./routes/models";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { secureHeaders } from "hono/secure-headers";
 import { handleProxy, proxyList } from "./routes/proxy";
+import v1 from "./routes/v1";
 
-const { preflight, corsify } = cors();
+const app = new Hono();
 
-const router = AutoRouter({
-	before: [preflight],
-	finally: [corsify],
-});
+// CORS for all routes
+app.use(cors());
+
+// Secure headers for all API routes
+app.use(secureHeaders());
 
 // Health check
-router.get("/health", () => json({ message: "OK" }));
-router.head("/health", () => new Response(null, { status: 200 }));
+app.get("/health", (c) => c.json({ message: "OK" }));
 
 // Proxy routes
 for (const proxy of proxyList) {
-	router.all(`${proxy.path}/*`, (request) => {
-		return handleProxy(request, proxy.path, proxy.host);
+	app.all(`${proxy.path}/*`, (c) => {
+		return handleProxy(c, proxy.path, proxy.host);
 	});
 }
 
-router.get("/v1/models", handleAuth, handleModelListRequest);
+app.route("/v1", v1);
 
-// Embeddings for text classification, similarity, etc.
-router.post("/v1/embeddings", handleAuth, relayLLMRequest);
-
-// Language models
-router.post("/v1/chat/completions", handleAuth, relayLLMRequest);
-
-// Audio models
-router.post("/v1/audio/translations", handleAuth, relayLLMRequest);
-router.post("/v1/audio/transcriptions", handleAuth, relayLLMRequest);
-
-// Rerank
-router.post("/v1/rerank", handleAuth, relayLLMRequest);
-
-// Fallback route
-router.get("/", () => json({ message: "OK" }));
-
-export default router;
+export default app;

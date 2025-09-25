@@ -54,7 +54,7 @@ function getModelInfoFromProvider(
  */
 function filterProvidersByUserKey(
 	providers: Provider[],
-	userKey: UserKey
+	userKey: UserKey,
 ): Provider[] {
 	// If allowedProviders is defined but empty, block all
 	if (userKey.allowedProviders && userKey.allowedProviders.length === 0) {

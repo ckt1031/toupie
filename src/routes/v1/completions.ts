@@ -1,5 +1,4 @@
-import { error } from "itty-router";
-import type { AuthenticatedRequest } from "../auth";
+import type { BlankInput, H } from "hono/types";
 import {
 	type BodyType,
 	bodyToBodyInit,
@@ -7,39 +6,46 @@ import {
 	modifyBodyWithStringValue,
 	proxiedFetch,
 	removeFieldsFromBody,
-} from "../utils/api-utils";
-import pickHeaders from "../utils/pick-headers";
-import { pickModelChannelWithFallback } from "../utils/pick-model";
+} from "../../utils/api-utils";
+import pickHeaders from "../../utils/pick-headers";
+import { pickModelChannelWithFallback } from "../../utils/pick-model";
+import type { V1Env } from "./types";
 
-export async function relayLLMRequest(request: AuthenticatedRequest) {
-	const contentType = request.headers.get("content-type");
+type RequestHandler = H<V1Env, "/v1/chat/completions", BlankInput, Response>;
+
+export const relayLLMRequest: RequestHandler = async (c) => {
+	const contentType = c.req.header("content-type");
 	const isBodyForm = contentType?.includes("multipart/form-data") ?? false;
 
 	// Only /v1/audio/* endpoints accept multipart form data to align with OpenAI API semantics
-	if (isBodyForm && !request.url.includes("/v1/audio/")) {
-		return error(400, "Form data is not allowed for this endpoint");
+	if (isBodyForm && !c.req.url.includes("/v1/audio/")) {
+		return c.json({ error: "Form data is not allowed for this endpoint" }, 400);
 	}
 
 	const body: BodyType = isBodyForm
-		? await request.formData()
-		: await request.json();
+		? await c.req.formData()
+		: await c.req.json();
 	const model: string | undefined = await getValueFromBody(body, "model");
 
 	// Model is required in OpenAI-compatible APIs
-	if (!model || !model.trim()) return error(400, "Model is required");
+	if (!model || !model.trim())
+		return c.json({ error: "Model is required" }, 400);
 
 	// Get user key data from request object (set by handleAuth middleware)
-	const userKey = request.userKey;
+	const userKey = c.get("userKey");
 
-	if (!userKey) return error(401, "Unauthorized");
+	if (!userKey) return c.json({ error: "Unauthorized" }, 401);
 
 	// Enforce model allowlist on the user key, if configured
 	if (userKey.allowedModels) {
 		if (userKey.allowedModels.length === 0) {
-			return error(403, "No models are allowed for this API key");
+			return c.json({ error: "No models are allowed for this API key" }, 403);
 		}
 		if (!userKey.allowedModels.includes(model)) {
-			return error(403, `Model ${model} is not allowed for this API key`);
+			return c.json(
+				{ error: `Model ${model} is not allowed for this API key` },
+				403,
+			);
 		}
 	}
 
@@ -50,13 +56,13 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 	const failedProviders: string[] = [];
 	const maxAttempts = 3; // Maximum number of retry attempts
 
-	const headers = pickHeaders(request.headers, [
+	const headers = pickHeaders(c.req.header(), [
 		"content-type",
 		"Authorization",
 		isBodyForm ? undefined : "content-type",
 	]);
 
-	const originalServerOrigin = new URL(request.url).origin;
+	const originalServerOrigin = new URL(c.req.url).origin;
 
 	while (attempts < maxAttempts) {
 		attempts++;
@@ -72,10 +78,13 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 		if (!channel) {
 			// Explicitly handle "no providers allowed" case for clarity
 			if (userKey?.allowedProviders && userKey.allowedProviders.length === 0) {
-				return error(403, "No providers are allowed for this API key");
+				return c.json(
+					{ error: "No providers are allowed for this API key" },
+					403,
+				);
 			}
 
-			return error(404, `Model ${model} not found`);
+			return c.json({ error: `Model ${model} not found` }, 404);
 		}
 
 		let newBodyObject = modifyBodyWithStringValue(
@@ -95,7 +104,7 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 
 		// Construct URL and headers per provider type (Azure vs. standard OpenAI-compatible)
 		if (channel.provider.isAzure) {
-			url = request.url.replace(
+			url = c.req.url.replace(
 				`${originalServerOrigin}/v1`,
 				`${channel.provider.baseURL}/openai/deployments/${channel.provider.model}`,
 			);
@@ -103,7 +112,7 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 
 			headers.set("api-key", channel.apiKey.value);
 		} else {
-			url = request.url.replace(
+			url = c.req.url.replace(
 				`${originalServerOrigin}/v1`,
 				channel.provider.baseURL,
 			);
@@ -123,7 +132,7 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 		try {
 			const response = await proxiedFetch(url, {
 				headers,
-				method: request.method,
+				method: c.req.method,
 				body: bodyToBodyInit(newBodyObject),
 			});
 
@@ -153,5 +162,5 @@ export async function relayLLMRequest(request: AuthenticatedRequest) {
 		failedKeys.push(channel.apiKey.value);
 	}
 
-	return error(500, "All attempts failed. Please try again later.");
-}
+	return c.json({ error: "All attempts failed. Please try again later." }, 500);
+};

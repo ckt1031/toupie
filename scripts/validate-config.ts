@@ -10,7 +10,7 @@ import type { APIConfig } from "../src/schema";
 function validateConfig(): void {
 	try {
 		const config = apiConfig as APIConfig;
-		apiConfigSchema.strict().parse(config);
+		apiConfigSchema.parse(config);
 		console.log("API configuration is valid");
 	} catch (error) {
 		console.error("API configuration validation failed:", error);

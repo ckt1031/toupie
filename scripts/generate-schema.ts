@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { apiConfigSchema } from "../src/schema";
-import * as z from "zod";
+import { z } from "zod/mini";
 import { writeFileSync } from "node:fs";
 
 /**
