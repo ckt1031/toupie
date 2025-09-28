@@ -7,8 +7,7 @@
 		"helper": "bun run scripts/helper.ts",
 		"lint": "tsc --noEmit && biome lint",
 		"lint:fix": "tsc --noEmit && biome check --write .",
-		"deploy:vercel": "vercel deploy . --prod --logs",
-		"deploy:wrangler": "wrangler deploy --latest --minify --upload-source-maps",
+		"deploy": "wrangler deploy --latest --minify --upload-source-maps",
 		"postbuild": "bun run scripts/validate-config.ts",
 		"postinstall": "bun run scripts/generate-schema.ts"
 	},
@@ -19,15 +18,14 @@
 		"@types/lodash": "^4.17.20",
 		"@types/node": "^24.5.2",
 		"typescript": "^5.9.2",
-		"vercel": "^48.1.6",
-		"wrangler": "^4.40.0"
+		"wrangler": "^4.40.2"
 	},
 	"dependencies": {
 		"@hono/oidc-auth": "^1.7.0",
 		"@inquirer/prompts": "^7.8.6",
 		"cli-progress": "^3.12.0",
 		"cli-table3": "^0.6.5",
-		"hono": "^4.9.8",
+		"hono": "^4.9.9",
 		"lodash": "^4.17.21",
 		"slugify": "^1.6.6",
 		"zod": "^4.1.11"

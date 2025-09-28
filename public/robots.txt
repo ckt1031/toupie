@@ -1,5 +1,2 @@
 User-agent: *
 Disallow: /
-Disallow: /dashboard
-Disallow: /proxy
-Disallow: /v1

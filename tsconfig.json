@@ -10,6 +10,7 @@
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
 		"jsx": "react-jsx",
-		"jsxImportSource": "hono/jsx"
+		"jsxImportSource": "hono/jsx",
+		"types": ["node"]
 	}
 }

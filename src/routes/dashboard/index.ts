@@ -14,7 +14,7 @@ import userKeys from "./UserKeys";
 
 export type DashboardEnv = {
 	Variables: {
-		auth: OidcAuth
+		auth: OidcAuth;
 	};
 };
 

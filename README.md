@@ -18,7 +18,7 @@ bun install
 
 ```bash
 bun run dev
-bun run deploy # Deploy to Vercel
+bun run deploy
 ```
 
 ### Chat Completion
