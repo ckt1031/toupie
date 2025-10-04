@@ -12,13 +12,13 @@
 		"postinstall": "bun run scripts/generate-schema.ts"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.2.4",
-		"@types/bun": "^1.2.22",
+		"@biomejs/biome": "2.2.5",
+		"@types/bun": "^1.2.23",
 		"@types/cli-progress": "^3.11.6",
 		"@types/lodash": "^4.17.20",
-		"@types/node": "^24.5.2",
-		"typescript": "^5.9.2",
-		"wrangler": "^4.40.2"
+		"@types/node": "^24.6.2",
+		"typescript": "^5.9.3",
+		"wrangler": "^4.42.0"
 	},
 	"dependencies": {
 		"@hono/oidc-auth": "^1.7.0",
