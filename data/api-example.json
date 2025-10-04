@@ -5,7 +5,8 @@
 			"issuer": "https://accounts.google.com",
 			"clientId": "1234567890",
 			"clientSecret": "1234567890",
-			"authSecret": "openssl rand -hex 32"
+			"authSecret": "openssl rand -hex 32",
+			"allowedEmails": ["test@example.com"]
 		}
 	},
 	"userKeys": [
